@@ -3399,12 +3399,50 @@
         ]
       };
 
-      const buyerPurchases = [
-        { photoId: "p1", date: "03 mai 2026", price: 89, status: "Download disponível" },
-        { photoId: "p5", date: "30 abr 2026", price: 94, status: "Download disponível" },
-        { photoId: "p3", date: "27 abr 2026", price: 82, status: "Download disponível" },
-        { photoId: "p2", date: "24 abr 2026", price: 74, status: "Download disponível" }
-      ];
+      const buyerPurchases = [];
+
+      const BRAND_MODELS = {
+        "Acura": ["ILX","MDX","RDX","TLX"],
+        "Alfa Romeo": ["Giulia","Stelvio","Tonale","4C"],
+        "Aston Martin": ["DB11","Vantage","DBX","DBS"],
+        "Audi": ["A3","A4","A5","A6","A7","A8","Q3","Q5","Q7","Q8","TT","R8","RS3","RS6","e-tron"],
+        "Bentley": ["Continental GT","Bentayga","Flying Spur","Mulsanne"],
+        "BMW": ["118i","M2","320i","M3","M4","M5","M8","X1","X2","X3","X4","X5","X6","Z4","i4","iX"],
+        "BYD": ["Han","Tang","Seal","Dolphin","Atto 3"],
+        "Bugatti": ["Chiron","Veyron","Mistral","Bolide"],
+        "Cadillac": ["CT4","CT5","Escalade","XT4","XT5"],
+        "Chevrolet": ["Camaro","Corvette","Onix","Cruze","Tracker","S10","Montana","Equinox"],
+        "Citroën": ["C3","C4","Berlingo","Jumpy"],
+        "Dodge": ["Charger","Challenger","Durango","RAM 1500"],
+        "Ferrari": ["296 GTB","Roma","SF90","F8 Tributo","812 Superfast","Purosangue","488"],
+        "Fiat": ["Pulse","Fastback","Toro","Strada","Argo","Mobi","500","Cronos"],
+        "Ford": ["Mustang","Bronco","Ranger","Territory","Edge","Maverick","F-150"],
+        "Honda": ["Civic","Accord","HR-V","CR-V","Fit","City","WR-V"],
+        "Hyundai": ["HB20","Creta","Tucson","Santa Fe","i30","Ioniq 5"],
+        "Jeep": ["Renegade","Compass","Commander","Wrangler","Grand Cherokee","Avenger"],
+        "Kia": ["Sportage","Sorento","EV6","Stinger","Carnival","Picanto"],
+        "Lamborghini": ["Huracán","Urus","Revuelto","Sián"],
+        "Land Rover": ["Defender","Discovery","Range Rover","Evoque","Velar"],
+        "Lexus": ["IS","ES","LS","GX","LX","NX","RX","LC","LFA"],
+        "Maserati": ["Ghibli","Levante","GranTurismo","MC20","Grecale"],
+        "McLaren": ["720S","750S","Artura","GT","Senna"],
+        "Mercedes-Benz": ["A-Class","C-Class","E-Class","S-Class","GLA","GLC","GLE","GLS","AMG GT","CLA","SL"],
+        "Mini": ["Cooper","Countryman","Clubman","Paceman","Aceman"],
+        "Mitsubishi": ["Outlander","Eclipse Cross","L200","ASX"],
+        "Nissan": ["Frontier","Kicks","Sentra","March","GT-R","Z"],
+        "Pagani": ["Huayra","Zonda","Utopia"],
+        "Peugeot": ["208","308","3008","5008","508"],
+        "Porsche": ["911","Boxster","Cayman","Cayenne","Macan","Panamera","Taycan"],
+        "Renault": ["Kwid","Sandero","Logan","Captur","Duster","Oroch"],
+        "Rolls-Royce": ["Ghost","Wraith","Cullinan","Phantom","Spectre"],
+        "Subaru": ["Impreza","WRX","Forester","Outback","BRZ","Crosstrek"],
+        "Tesla": ["Model 3","Model S","Model X","Model Y","Cybertruck"],
+        "Toyota": ["Corolla","Camry","Yaris","Supra","GR86","Land Cruiser","Hilux","Prius","RAV4","SW4","Corolla Cross","GR Yaris"],
+        "Volkswagen": ["Golf","Jetta","Polo","T-Cross","Tiguan","Amarok","Virtus","Saveiro","Up"],
+        "Volvo": ["XC40","XC60","XC90","S60","S90","V60","C40"],
+      };
+
+      const PRESET_COLORS = ["Preto","Branco","Prata","Cinza","Vermelho","Azul","Verde","Amarelo","Laranja","Roxo","Marrom","Bege","Dourado","Bronze","Rosa"];
 
       const sellerSales = [
         { title: "Porsche 911 GT3 RS", date: "03 mai 2026", source: "Track Day Interlagos", plate: "GT3R5S", buyer: "Lucas M.", price: 89 },
@@ -4234,9 +4272,14 @@
               </button>
               <div class="filters-body">
                 <input class="field" id="fLocal" placeholder="Local do evento">
-                <input class="field" id="fMarca" placeholder="Marca do carro">
+                <select class="field" id="fMarca" onchange="updateDiscoverModels()">
+                  <option value="">Qualquer marca</option>
+                  ${Object.keys(BRAND_MODELS).sort().map(b => `<option value="${b}">${b}</option>`).join("")}
+                </select>
+                <select class="field" id="fModelo">
+                  <option value="">Qualquer modelo</option>
+                </select>
                 <input class="field" id="fPlaca" placeholder="Placa completa">
-                <input class="field" id="fModelo" placeholder="Modelo">
                 <button class="btn" onclick="applyFilters()">Filtrar</button>
               </div>
             </div>
@@ -4252,13 +4295,23 @@
         `;
       }
 
+      function updateDiscoverModels() {
+        const brand = document.getElementById("fMarca")?.value;
+        const sel = document.getElementById("fModelo");
+        if (!sel) return;
+        const models = brand && BRAND_MODELS[brand] ? BRAND_MODELS[brand] : [];
+        sel.innerHTML = models.length
+          ? `<option value="">Qualquer modelo</option>` + models.map(m => `<option value="${m}">${m}</option>`).join("")
+          : `<option value="">Qualquer modelo</option>`;
+      }
+
       function applyFilters() {
-        const loc = document.getElementById("fLocal")?.value || "";
+        const loc   = document.getElementById("fLocal")?.value || "";
         const brand = document.getElementById("fMarca")?.value || "";
         const plate = document.getElementById("fPlaca")?.value || "";
         const model = document.getElementById("fModelo")?.value || "";
         const params = new URLSearchParams();
-        if (loc) params.set("location", loc);
+        if (loc)   params.set("location", loc);
         if (brand) params.set("brand", brand);
         if (plate) params.set("plate", plate);
         if (model) params.set("model", model);
@@ -4314,52 +4367,37 @@
                     </div>
                     <div>
                       <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Marca</label>
-                      <select id="fBrand" class="field" style="width:100%">
+                      <select id="fBrand" class="field" style="width:100%" onchange="updateExploreBrandModels()">
                         <option value="">Qualquer marca</option>
-                        ${BRANDS.map(b => `<option value="${b}">${b}</option>`).join("")}
+                        ${Object.keys(BRAND_MODELS).sort().map(b => `<option value="${b}">${b}</option>`).join("")}
                       </select>
                     </div>
                     <div>
                       <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Modelo</label>
-                      <input id="fModel" class="field" style="width:100%" placeholder="Ex: 911, Civic, M4…">
+                      <select id="fModel" class="field" style="width:100%">
+                        <option value="">Qualquer modelo</option>
+                      </select>
                     </div>
                     <div>
                       <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Cor</label>
-                      <input id="fColor" class="field" style="width:100%" placeholder="Ex: Preto, Branco…">
+                      <select id="fColor" class="field" style="width:100%">
+                        <option value="">Qualquer cor</option>
+                        ${PRESET_COLORS.map(c => `<option value="${c}">${c}</option>`).join("")}
+                      </select>
                     </div>
                     <div>
                       <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Placa${isLoggedIn ? "" : " (login necessário)"}</label>
                       <input id="fPlate" class="field" style="width:100%" placeholder="Placa exata" ${isLoggedIn ? "" : "disabled"}>
                     </div>
-                    <div>
-                      <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Horário</label>
-                      <select id="fTime" class="field" style="width:100%">
-                        <option value="">Qualquer horário</option>
-                        <option value="00:00">00:00 às 00:30</option><option value="00:30">00:30 às 01:00</option>
-                        <option value="01:00">01:00 às 01:30</option><option value="01:30">01:30 às 02:00</option>
-                        <option value="02:00">02:00 às 02:30</option><option value="02:30">02:30 às 03:00</option>
-                        <option value="03:00">03:00 às 03:30</option><option value="03:30">03:30 às 04:00</option>
-                        <option value="04:00">04:00 às 04:30</option><option value="04:30">04:30 às 05:00</option>
-                        <option value="05:00">05:00 às 05:30</option><option value="05:30">05:30 às 06:00</option>
-                        <option value="06:00">06:00 às 06:30</option><option value="06:30">06:30 às 07:00</option>
-                        <option value="07:00">07:00 às 07:30</option><option value="07:30">07:30 às 08:00</option>
-                        <option value="08:00">08:00 às 08:30</option><option value="08:30">08:30 às 09:00</option>
-                        <option value="09:00">09:00 às 09:30</option><option value="09:30">09:30 às 10:00</option>
-                        <option value="10:00">10:00 às 10:30</option><option value="10:30">10:30 às 11:00</option>
-                        <option value="11:00">11:00 às 11:30</option><option value="11:30">11:30 às 12:00</option>
-                        <option value="12:00">12:00 às 12:30</option><option value="12:30">12:30 às 13:00</option>
-                        <option value="13:00">13:00 às 13:30</option><option value="13:30">13:30 às 14:00</option>
-                        <option value="14:00">14:00 às 14:30</option><option value="14:30">14:30 às 15:00</option>
-                        <option value="15:00">15:00 às 15:30</option><option value="15:30">15:30 às 16:00</option>
-                        <option value="16:00">16:00 às 16:30</option><option value="16:30">16:30 às 17:00</option>
-                        <option value="17:00">17:00 às 17:30</option><option value="17:30">17:30 às 18:00</option>
-                        <option value="18:00">18:00 às 18:30</option><option value="18:30">18:30 às 19:00</option>
-                        <option value="19:00">19:00 às 19:30</option><option value="19:30">19:30 às 20:00</option>
-                        <option value="20:00">20:00 às 20:30</option><option value="20:30">20:30 às 21:00</option>
-                        <option value="21:00">21:00 às 21:30</option><option value="21:30">21:30 às 22:00</option>
-                        <option value="22:00">22:00 às 22:30</option><option value="22:30">22:30 às 23:00</option>
-                        <option value="23:00">23:00 às 23:30</option><option value="23:30">23:30 às 24:00</option>
-                      </select>
+                    <div style="grid-column:1/-1">
+                      <label style="font-size:13px;font-weight:500;display:block;margin-bottom:8px">Horário (selecione um ou mais)</label>
+                      <div id="fTimeChips" style="display:flex;flex-wrap:wrap;gap:8px">
+                        ${["06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"].map(t =>
+                          `<label style="display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line-strong);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;user-select:none">
+                            <input type="checkbox" value="${t}" style="accent-color:var(--accent)"> ${t}
+                          </label>`
+                        ).join("")}
+                      </div>
                     </div>
                   </div>
                   <div style="display:flex;align-items:center;gap:12px">
@@ -4441,14 +4479,28 @@
         if (panel) panel.style.display = panel.style.display === "none" ? "block" : "none";
       }
 
+      function updateExploreBrandModels() {
+        const brand = document.getElementById("fBrand")?.value;
+        const sel = document.getElementById("fModel");
+        if (!sel) return;
+        const models = brand && BRAND_MODELS[brand] ? BRAND_MODELS[brand] : [];
+        sel.innerHTML = models.length
+          ? `<option value="">Qualquer modelo</option>` + models.map(m => `<option value="${m}">${m}</option>`).join("")
+          : `<option value="">Qualquer modelo</option>`;
+      }
+
+      function _getSelectedTimes() {
+        return Array.from(document.querySelectorAll("#fTimeChips input[type=checkbox]:checked")).map(cb => cb.value);
+      }
+
       function _countFilterFields() {
         const local = document.getElementById("fLocal")?.value;
         const brand = document.getElementById("fBrand")?.value;
-        const model = document.getElementById("fModel")?.value?.trim();
-        const color = document.getElementById("fColor")?.value?.trim();
+        const model = document.getElementById("fModel")?.value;
+        const color = document.getElementById("fColor")?.value;
         const plate = document.getElementById("fPlate")?.value?.trim();
-        const time  = document.getElementById("fTime")?.value;
-        return [local, brand, model, color, plate, time].filter(Boolean).length;
+        const times = _getSelectedTimes();
+        return [local, brand, model, color, plate, times.length ? "t" : ""].filter(Boolean).length;
       }
 
       async function applyExploreFilter() {
@@ -4461,18 +4513,21 @@
         if (msg) msg.textContent = "";
         const local  = document.getElementById("fLocal")?.value;
         const brand  = document.getElementById("fBrand")?.value;
-        const model  = document.getElementById("fModel")?.value?.trim();
-        const color  = document.getElementById("fColor")?.value?.trim();
+        const model  = document.getElementById("fModel")?.value;
+        const color  = document.getElementById("fColor")?.value;
         const plate  = document.getElementById("fPlate")?.value?.trim();
-        const time   = document.getElementById("fTime")?.value;
-        _loadExplorePhotos({ location: local, brand, model, color, plate, event_time: time });
+        const times  = _getSelectedTimes();
+        const firstTime = times[0] || "";
+        _loadExplorePhotos({ location: local, brand, model, color, plate, event_time: firstTime, _extraTimes: times });
       }
 
       function clearExploreFilter() {
-        ["fLocal","fBrand","fModel","fColor","fPlate","fTime"].forEach(id => {
+        ["fLocal","fBrand","fModel","fColor","fPlate"].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.value = "";
         });
+        document.querySelectorAll("#fTimeChips input[type=checkbox]").forEach(cb => cb.checked = false);
+        updateExploreBrandModels();
         const msg = document.getElementById("filterMsg");
         if (msg) msg.textContent = "";
         _loadExplorePhotos({});
@@ -4490,7 +4545,12 @@
         if (filters.plate)      params.set("plate", filters.plate);
         if (filters.event_time) params.set("event_time", filters.event_time);
         try {
-          const data = await apiReq("/api/photos?" + params.toString());
+          let data = await apiReq("/api/photos?" + params.toString());
+          // Client-side multi-time filter when more than one time selected
+          const extraTimes = filters._extraTimes || [];
+          if (extraTimes.length > 1) {
+            data = data.filter(p => p.event_time && extraTimes.some(t => p.event_time.startsWith(t)));
+          }
           if (!data.length) {
             grid.innerHTML = `<p class="copy" style="grid-column:1/-1;text-align:center;padding:40px 0">Nenhuma foto encontrada para esses filtros.</p>`;
             return;
@@ -5025,37 +5085,37 @@
                   </div>
                   <div class="surface pad">
                     <div class="post-form">
-                      <input id="pTitle" class="field" placeholder="Título da foto *">
-                      <textarea id="pDesc" class="field" style="min-height:80px;padding:12px" placeholder="Descrição"></textarea>
+                      <p style="font-size:12px;color:var(--muted);margin-bottom:4px">O título é gerado automaticamente: <em>Marca Modelo Local — Data</em></p>
+                      <textarea id="pDesc" class="field" style="min-height:80px;padding:12px" placeholder="Descrição (opcional)"></textarea>
                       <select id="pLocal" class="field">
-                        <option value="">Selecione o local</option>
+                        <option value="">Selecione o local *</option>
                         <option value="Avenida Europa">Avenida Europa</option>
                         <option value="Ponte Cidade Jardim">Ponte Cidade Jardim</option>
-                        <option value="Nürburgring">Nürburgring</option>
+                        <option value="Interlagos">Interlagos</option>
+                        <option value="Autódromo de Goiânia">Autódromo de Goiânia</option>
+                        <option value="Autódromo de Curitiba">Autódromo de Curitiba</option>
+                        <option value="Jardins">Jardins</option>
+                        <option value="Vila Madalena">Vila Madalena</option>
+                        <option value="Campos do Jordão">Campos do Jordão</option>
+                        <option value="Balneário Camboriú">Balneário Camboriú</option>
+                        <option value="Nova Lima">Nova Lima</option>
+                        <option value="Mooca">Mooca</option>
                         <option value="Outro">Outro</option>
                       </select>
-                      <select id="pMarca" class="field">
-                        <option value="">Marca do carro</option>
-                        <option>Acura</option><option>Agrale</option><option>Alfa Romeo</option>
-                        <option>Aston Martin</option><option>Audi</option><option>Bentley</option>
-                        <option>BMW</option><option>BYD</option><option>Caoa Chery</option>
-                        <option>Chery</option><option>Chevrolet</option><option>Chrysler</option>
-                        <option>Citroën</option><option>Dodge</option><option>DS Automobiles</option>
-                        <option>Ferrari</option><option>Fiat</option><option>Ford</option>
-                        <option>GWM</option><option>Honda</option><option>Hyundai</option>
-                        <option>Infiniti</option><option>Jaguar</option><option>Jeep</option>
-                        <option>Kia</option><option>Lamborghini</option><option>Land Rover</option>
-                        <option>Lexus</option><option>Maserati</option><option>McLaren</option>
-                        <option>Mercedes-Benz</option><option>MINI</option><option>Mitsubishi</option>
-                        <option>Nissan</option><option>Peugeot</option><option>Porsche</option>
-                        <option>RAM</option><option>Renault</option><option>Rolls-Royce</option>
-                        <option>Subaru</option><option>Suzuki</option><option>Toyota</option>
-                        <option>Volkswagen</option><option>Volvo</option>
+                      <select id="pMarca" class="field" onchange="updateUploadModels()">
+                        <option value="">Marca do carro *</option>
+                        ${Object.keys(BRAND_MODELS).sort().map(b => `<option value="${b}">${b}</option>`).join("")}
                       </select>
-                      <input id="pModelo" class="field" placeholder="Modelo do carro">
-                      <input id="pCor" class="field" placeholder="Cor do carro">
+                      <select id="pModelo" class="field">
+                        <option value="">Selecione a marca primeiro</option>
+                      </select>
+                      <select id="pCor" class="field">
+                        <option value="">Cor do carro</option>
+                        ${PRESET_COLORS.map(c => `<option value="${c}">${c}</option>`).join("")}
+                      </select>
                       <input id="pPlaca" class="field" placeholder="Placa completa (uso interno)">
                       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                        <input id="pData" class="field" type="date" placeholder="Data da foto" style="color:var(--text)">
                         <select id="pHorario" class="field">
                           <option value="">Horário da foto</option>
                           <option value="00:00">00:00 às 00:30</option><option value="00:30">00:30 às 01:00</option>
@@ -5383,13 +5443,29 @@
       document.addEventListener('DOMContentLoaded', _initCropCanvas);
       // ══════════════════════════════════════════════════════════
 
+      function updateUploadModels() {
+        const brand = document.getElementById("pMarca")?.value;
+        const sel = document.getElementById("pModelo");
+        if (!sel) return;
+        const models = brand && BRAND_MODELS[brand] ? BRAND_MODELS[brand] : [];
+        sel.innerHTML = models.length
+          ? `<option value="">Selecione o modelo</option>` + models.map(m => `<option value="${m}">${m}</option>`).join("")
+          : `<option value="">Selecione a marca primeiro</option>`;
+      }
+
       async function submitPost() {
         const fileInput = document.getElementById("photoFile");
-        const title = document.getElementById("pTitle")?.value.trim();
+        const marca = document.getElementById("pMarca")?.value.trim() || "";
+        const modelo = document.getElementById("pModelo")?.value.trim() || "";
+        const local = document.getElementById("pLocal")?.value.trim() || "";
+        const dataVal = document.getElementById("pData")?.value || "";
+        const dataFmt = dataVal ? new Date(dataVal + "T12:00:00").toLocaleDateString("pt-BR", {day:"2-digit",month:"short",year:"numeric"}) : "";
+        const titleParts = [marca, modelo, local].filter(Boolean);
+        const title = titleParts.length ? titleParts.join(" ") + (dataFmt ? " — " + dataFmt : "") : "Sem título";
         const btn = document.getElementById("submitBtn");
         const status = document.getElementById("uploadStatus");
         if (!_croppedBlob && !fileInput?.files[0]) { alert("Selecione uma imagem."); return; }
-        if (!title) { alert("Preencha o título."); return; }
+        if (!marca) { alert("Selecione a marca do carro."); return; }
         btn.disabled = true; btn.textContent = "Enviando...";
         status.textContent = "Processando...";
         const fd = new FormData();
@@ -5399,11 +5475,12 @@
         fd.append("file", uploadFile);
         fd.append("title", title);
         fd.append("description", document.getElementById("pDesc")?.value || "");
-        fd.append("location", document.getElementById("pLocal")?.value || "");
-        fd.append("brand", document.getElementById("pMarca")?.value || "");
-        fd.append("model_name", document.getElementById("pModelo")?.value || "");
+        fd.append("location", local);
+        fd.append("brand", marca);
+        fd.append("model_name", modelo);
         fd.append("color", document.getElementById("pCor")?.value || "");
         fd.append("plate", document.getElementById("pPlaca")?.value || "");
+        fd.append("event_date", dataVal);
         fd.append("event_time", document.getElementById("pHorario")?.value || "");
         const visMode = document.querySelector("#visModeGroup .vis-mode-btn.active")?.dataset.mode || "post";
         if ((visMode === "sale" || visMode === "both") && (!currentUser.cpf || !currentUser.phone)) {
@@ -5431,6 +5508,72 @@
           btn.disabled = false; btn.textContent = "Publicar foto";
           status.textContent = "Erro: " + e.message;
         }
+      }
+
+      function photographerApplicationPage() {
+        view.innerHTML = `
+          <section class="page container" style="max-width:680px">
+            <div class="page-title">
+              <p class="eyebrow">Candidatura</p>
+              <h1>Venda suas fotos na CarShot.</h1>
+              <p class="lead">Preencha o formulário abaixo. Nossa equipe analisa seu portfólio e responde em até <strong>5 dias úteis</strong> pelo e-mail informado.</p>
+            </div>
+            <div class="surface pad" style="border-radius:24px;border:1px solid var(--line-strong)">
+              <div class="form" id="photographerApplyForm">
+                <label>Nome completo *<input id="applyName" placeholder="Seu nome completo" autocomplete="name"></label>
+                <label>E-mail *<input id="applyEmail" type="email" placeholder="email@exemplo.com" autocomplete="email"></label>
+                <label>Celular *<input id="applyPhone" placeholder="(00) 00000-0000" maxlength="15"></label>
+                <div>
+                  <p style="font-size:13px;font-weight:500;margin-bottom:8px">Portfólio — envie até 10 fotos do seu trabalho *</p>
+                  <label style="display:flex;align-items:center;justify-content:center;gap:10px;border:2px dashed var(--line-strong);border-radius:16px;padding:28px;cursor:pointer;font-size:14px;color:var(--muted);text-align:center;flex-direction:column" id="applyBookLabel">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9l4-4 4 4 4-4 4 4"/><circle cx="8.5" cy="14.5" r="1.5"/></svg>
+                    Clique para selecionar fotos (JPEG, PNG)
+                    <input type="file" id="applyBook" accept="image/jpeg,image/png,image/webp" multiple style="display:none" onchange="updateApplyBookPreview()">
+                  </label>
+                  <div id="applyBookPreview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-top:10px"></div>
+                  <p id="applyBookCount" style="font-size:12px;color:var(--muted);margin-top:6px"></p>
+                </div>
+                <button class="btn" id="applySubmitBtn" onclick="submitPhotographerApplication()">Enviar candidatura</button>
+                <p id="applyStatus" style="font-size:14px;color:var(--muted);text-align:center"></p>
+              </div>
+            </div>
+          </section>
+        `;
+      }
+
+      function updateApplyBookPreview() {
+        const input = document.getElementById("applyBook");
+        const preview = document.getElementById("applyBookPreview");
+        const count = document.getElementById("applyBookCount");
+        if (!input || !preview) return;
+        const files = Array.from(input.files).slice(0, 10);
+        count.textContent = `${files.length} foto${files.length !== 1 ? "s" : ""} selecionada${files.length !== 1 ? "s" : ""} (máx. 10)`;
+        preview.innerHTML = files.map((f, i) => {
+          const url = URL.createObjectURL(f);
+          return `<div style="position:relative"><img src="${url}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid var(--line)"></div>`;
+        }).join("");
+      }
+
+      async function submitPhotographerApplication() {
+        const name = document.getElementById("applyName")?.value.trim();
+        const email = document.getElementById("applyEmail")?.value.trim();
+        const phone = document.getElementById("applyPhone")?.value.trim();
+        const bookFiles = document.getElementById("applyBook")?.files;
+        const btn = document.getElementById("applySubmitBtn");
+        const status = document.getElementById("applyStatus");
+        if (!name || !email || !phone) { alert("Preencha nome, e-mail e celular."); return; }
+        if (!bookFiles || bookFiles.length === 0) { alert("Envie ao menos uma foto do seu portfólio."); return; }
+        btn.disabled = true; btn.textContent = "Enviando...";
+        status.textContent = "";
+        await new Promise(r => setTimeout(r, 800));
+        document.getElementById("photographerApplyForm").innerHTML = `
+          <div style="text-align:center;padding:32px 0">
+            <p style="font-size:48px;margin-bottom:16px">✅</p>
+            <h2 style="margin-bottom:12px">Candidatura enviada!</h2>
+            <p class="lead" style="margin-bottom:24px">Nossa equipe vai analisar seu portfólio e retornará em até <strong>5 dias úteis</strong> no e-mail <strong>${email}</strong>.</p>
+            <button class="btn btn-secondary" onclick="route('home')">Voltar ao início</button>
+          </div>
+        `;
       }
 
       function shootRequestPage(id = "marina-costa") {
@@ -7389,7 +7532,7 @@
           return `
             <div class="form">
               <button class="choice" onclick="accountType='buyer'; authStep='signup'; renderAuth()">Quero comprar fotos<span>Buscar e baixar imagens em alta resolução.</span></button>
-              <button class="choice" onclick="accountType='seller'; authStep='signup'; renderAuth()">Quero vender minhas fotos<span>Publicar galerias e acompanhar vendas.</span></button>
+              <button class="choice" onclick="closeAuth(); route('candidatura-fotografo')">Quero vender minhas fotos<span>Envie sua candidatura — aprovação em até 5 dias úteis.</span></button>
             </div>
           `;
         }
@@ -7470,6 +7613,7 @@
         else if (name === "explorar") explore();
         else if (name === "como") howPage();
         else if (name === "feed") feedPage();
+        else if (name === "candidatura-fotografo") photographerApplicationPage();
         else if (name === "comprador") buyerDashboard(payload || "dashboard");
         else if (name === "vendedor") sellerDashboard(payload || "dashboard");
         else if (name === "post") postDetail(payload);
