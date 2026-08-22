@@ -1,0 +1,49 @@
+# Variáveis de ambiente (nunca subir para o git)
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.env
+*.env
+
+# Banco de dados (exceto o principal do projeto)
+# *.db  — incluído para preservar usuários e dados
+*.sqlite
+*.sqlite3
+
+# Uploads incluídos para preservar fotos
+# backend/uploads/
+
+# Ignorar apenas o banco de desenvolvimento secundário
+backend/carshot-Jarvis.db
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# VS Code
+.vscode/
+
+# Arquivos temporários
+*.tmp
+*.bak
+*.swp
+
+# Demos locais
+carshot-demo.html
+carshot-demo-real.html
+
+# Scripts de instalação Windows (opcionais no git)
+# instalar.bat
+# iniciar.bat
