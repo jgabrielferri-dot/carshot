@@ -17,7 +17,7 @@ from routes.user_routes import router as user_router
 from routes.follow_routes import router as follow_router
 from routes.interaction_routes import router as interaction_router
 
-app = FastAPI(title="CarShot API", version="1.0.0")
+app = FastAPI(title="CarShot API", version="1.0.0", docs_url=None, redoc_url=None)
 
 app.add_middleware(
     CORSMiddleware,
