@@ -3444,14 +3444,7 @@
 
       const PRESET_COLORS = ["Preto","Branco","Prata","Cinza","Vermelho","Azul","Verde","Amarelo","Laranja","Roxo","Marrom","Bege","Dourado","Bronze","Rosa"];
 
-      const sellerSales = [
-        { title: "Porsche 911 GT3 RS", date: "03 mai 2026", source: "Track Day Interlagos", plate: "GT3R5S", buyer: "Lucas M.", price: 89 },
-        { title: "BMW M3 Competition", date: "02 mai 2026", source: "Ponte Cidade Jardim", plate: "M3COMP", buyer: "Rafael S.", price: 76 },
-        { title: "Porsche Cayman GT4", date: "30 abr 2026", source: "Encontro Porsche", plate: "GT4SP2", buyer: "Marina A.", price: 94 },
-        { title: "Ford Mustang GT", date: "29 abr 2026", source: "Cars & Coffee SP", plate: "MUS7A21", buyer: "Bruno P.", price: 68 },
-        { title: "BMW M4 Competition", date: "27 abr 2026", source: "BMW Club Brasil", plate: "M4COMP", buyer: "Caio R.", price: 82 },
-        { title: "Porsche 911 Turbo S", date: "25 abr 2026", source: "Aldeia da Serra", plate: "TURB911", buyer: "Fernanda L.", price: 91 }
-      ];
+      const sellerSales = [];
 
       const sellerAlbums = [
         { title: "Porsche em geral", type: "Marca", detail: "Porsche", count: 42, last: "Atualizado hoje", image: photos[0].image },
@@ -6337,19 +6330,15 @@
 
         if (page === "vendas") {
           view.innerHTML = `
-            <section class="container dash-hero"><p class="eyebrow">Fotógrafo</p><h1>Vendas.</h1><p class="lead" style="margin-top:18px">Todas as fotos vendidas com data, origem, placa, comprador e preço.</p></section>
+            <section class="container dash-hero"><p class="eyebrow">Fotógrafo</p><h1>Vendas.</h1><p class="lead" style="margin-top:18px">Aqui você acompanhará todas as fotos vendidas com data, origem, placa, comprador e valor.</p></section>
             <section class="container section-slim dash-shell">
               ${sellerShell("vendas")}
               <div class="dash-content">
-                <div class="dash-metrics">
-                  ${dashMetric(String(sellerSales.length), "fotos vendidas")}
-                  ${dashMetric(money(soldTotal), "receita recente")}
-                  ${dashMetric("R$ 83", "ticket médio")}
-                  ${dashMetric("7,3%", "conversão")}
-                </div>
-                <div class="dash-section">
-                  <div class="dash-section-head"><div><p class="eyebrow">Relatório</p><h2>Todas as fotos vendidas</h2></div></div>
-                  ${sellerSalesTable()}
+                <div class="dash-section" style="text-align:center;padding:64px 0">
+                  <p style="font-size:40px;margin-bottom:16px">📊</p>
+                  <h2 style="margin-bottom:10px">Nenhuma venda ainda</h2>
+                  <p class="lead" style="max-width:420px;margin:0 auto 28px">Publique suas fotos e quando uma venda acontecer ela aparecerá aqui com todos os detalhes.</p>
+                  <button class="btn" onclick="route('novo-post')">Publicar primeira foto</button>
                 </div>
               </div>
             </section>`;
@@ -6477,10 +6466,10 @@
               </div>
               <div class="dash-section" id="seller-sales">
                 <div class="dash-section-head">
-                  <div><p class="eyebrow">Vendas</p><h2>${sellerSales.length} fotos vendidas</h2></div>
+                  <div><p class="eyebrow">Vendas</p><h2>Relatório de vendas</h2></div>
                   <button class="btn btn-secondary" onclick="route('vendedor','vendas')">Ver relatório</button>
                 </div>
-                <p class="copy">Receita recente: <strong>${money(soldTotal)}</strong>. Acesse o relatório completo para ver detalhes por foto, comprador e origem.</p>
+                <p class="copy" style="color:var(--muted)">As vendas realizadas aparecerão aqui com todos os detalhes.</p>
               </div>
               <!-- Seguindo -->
               <div class="dash-section">
