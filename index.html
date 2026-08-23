@@ -3634,62 +3634,16 @@
       }
 
       // ── Buy contact modal ─────────────────────────────────────
-      async function openBuyContact(photographerId, price, title) {
-        if (!requireLogin()) return;
-        const overlay = document.createElement("div");
-        overlay.id = "buyContactOverlay";
-        overlay.style.cssText = "position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:20px;background:rgba(247,246,242,.82);backdrop-filter:blur(18px)";
-        overlay.innerHTML = `
-          <div style="width:min(420px,100%);background:var(--panel);border:1px solid var(--line-strong);border-radius:28px;padding:clamp(24px,4vw,40px)">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-              <div><p class="eyebrow">Comprar foto</p><h2 style="margin:4px 0 0;font-size:20px">${title || ""}</h2></div>
-              <button onclick="closeBuyContact()" style="border:0;background:none;font-size:22px;cursor:pointer;color:var(--muted)">✕</button>
-            </div>
-            <p class="copy">Carregando dados de contato…</p>
-          </div>`;
-        document.body.appendChild(overlay);
-        overlay.addEventListener("click", e => { if (e.target === overlay) closeBuyContact(); });
+      const CARSHOT_WPP = "5519982912656";
 
-        try {
-          const user = await apiReq(`/api/users/${photographerId}`);
-          const inner = overlay.querySelector("div > div");
-          const hasPhone = user.phone && user.phone.trim();
-          const hasEmail = user.contact_email && user.contact_email.trim();
-          inner.innerHTML = `
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-              <div><p class="eyebrow">Comprar foto</p><h2 style="margin:4px 0 0;font-size:20px">${title || ""}</h2></div>
-              <button onclick="closeBuyContact()" style="border:0;background:none;font-size:22px;cursor:pointer;color:var(--muted)">✕</button>
-            </div>
-            ${price ? `<div class="summary-row" style="margin-bottom:20px"><span>Preço</span><strong style="font-size:20px">R$ ${price}</strong></div>` : ""}
-            <p class="copy" style="margin-bottom:16px">Entre em contato com <strong>${user.nickname ? "@" + user.nickname : user.name}</strong> para finalizar a compra da foto em alta resolução:</p>
-            ${hasPhone ? `
-              <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--panel-soft);border-radius:14px;margin-bottom:10px">
-                <span style="font-size:20px">📱</span>
-                <div>
-                  <p class="eyebrow" style="margin:0 0 2px">Celular / WhatsApp</p>
-                  <a href="https://wa.me/55${(user.phone).replace(/\D/g,"")}" target="_blank" style="font-weight:600;font-size:15px;color:var(--ink);text-decoration:none">${user.phone}</a>
-                </div>
-              </div>` : ""}
-            ${hasEmail ? `
-              <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--panel-soft);border-radius:14px;margin-bottom:10px">
-                <span style="font-size:20px">✉️</span>
-                <div>
-                  <p class="eyebrow" style="margin:0 0 2px">E-mail de contato</p>
-                  <a href="mailto:${user.contact_email}" style="font-weight:600;font-size:15px;color:var(--ink);text-decoration:none">${user.contact_email}</a>
-                </div>
-              </div>` : ""}
-            ${!hasPhone && !hasEmail ? `
-              <div style="padding:16px;background:var(--panel-soft);border-radius:14px;text-align:center">
-                <p class="copy">O fotógrafo ainda não informou dados de contato. Visite o perfil dele para mais informações.</p>
-              </div>` : ""}
-            <button class="btn btn-secondary" style="width:100%;margin-top:18px" onclick="closeBuyContact()">Fechar</button>`;
-        } catch {
-          const inner = overlay.querySelector("div > div p.copy");
-          if (inner) inner.textContent = "Erro ao carregar dados de contato.";
-        }
-      }
-      function closeBuyContact() {
-        document.getElementById("buyContactOverlay")?.remove();
+      function openBuyContact(photographerId, price, title, photoId) {
+        if (!requireLogin()) return;
+        const priceText = price ? ` por *R$ ${price}*` : "";
+        const photoUrl = photoId
+          ? `\n\nLink da foto: https://jgabrielferri-dot.github.io/carshot/#post/${String(photoId).replace("api-photo-","")}`
+          : "";
+        const msg = `Olá! Tenho interesse em comprar a foto *${title || "sem título"}*${priceText} na CarShot.${photoUrl}`;
+        window.open(`https://wa.me/${CARSHOT_WPP}?text=${encodeURIComponent(msg)}`, "_blank");
       }
 
       // like count cache: { "api-5": 3 }
@@ -3871,7 +3825,7 @@
                     onclick="toggleSave('${post.id}')">${saved ? "🔖 Salvo" : "🔖 Salvar"}</button>`}
                 <button class="social-btn" onclick="route('post','${post.id}')">💬 Comentar${commentCount ? " " + commentCount : ""}</button>
                 <button class="social-btn" onclick="route('post','${post.id}')">Ver mais</button>
-                ${post.sellable && !isOwner ? `<button class="social-btn active" onclick="openBuyContact(${post.photographerId || ""}, ${post.price || "null"}, '${(post.car || post.title || "").replace(/'/g, "\\'")}')">Comprar foto</button>` : ""}
+                ${post.sellable && !isOwner ? `<button class="social-btn active" onclick="openBuyContact(${post.photographerId || ""}, ${post.price || "null"}, '${(post.car || post.title || "").replace(/'/g, "\\'")}', '${post.id || ""}')">Comprar foto</button>` : ""}
               </div>
             </div>
           </article>
@@ -4884,7 +4838,7 @@
                         ? `<div class="summary-row" style="margin-top:22px"><span>Preço</span><strong>R$ ${p.price || "—"}</strong></div>
                            <p class="copy" style="margin-top:10px;padding:12px 16px;background:var(--panel-soft);border-radius:12px;font-size:13px">Esta é sua foto à venda.</p>`
                         : `<div class="summary-row" style="margin-top:22px"><span>Preço</span><strong>R$ ${p.price || "—"}</strong></div>
-                           <button class="btn" style="width:100%;margin-top:14px" onclick="openBuyContact(${p.photographer_id}, ${p.price || "null"}, '${(p.title || "").replace(/'/g, "\\'")}')">Comprar foto em alta resolução</button>`)
+                           <button class="btn" style="width:100%;margin-top:14px" onclick="openBuyContact(${p.photographer_id}, ${p.price || "null"}, '${(p.title || "").replace(/'/g, "\\'")}', ${p.id || "null"})">Comprar foto em alta resolução</button>`)
                     : `<p class="copy" style="margin-top:22px;padding:14px;background:var(--panel-soft);border-radius:12px">Esta foto faz parte do portfólio público do fotógrafo e não está à venda.</p>`}
 
                   <div style="margin-top:28px" id="commentSection-${p.id}">
@@ -4947,7 +4901,7 @@
                 <button class="social-btn ${saved ? "active" : ""}" onclick="toggleSave('${post.id}')">Salvar</button>
                 <button class="social-btn">Compartilhar</button>
               </div>
-              ${post.sellable ? `<div class="summary-row" style="margin-top:22px"><span>Preço</span><strong>${money(post.price)}</strong></div><button class="btn" style="width:100%;margin-top:18px" onclick="openBuyContact(${post.photographerId || "null"}, ${post.price || "null"}, '${(post.car || "").replace(/'/g, "\\'")}')">Comprar foto</button>` : `<p class="copy" style="margin-top:22px">Este post é público e não está à venda.</p>`}
+              ${post.sellable ? `<div class="summary-row" style="margin-top:22px"><span>Preço</span><strong>${money(post.price)}</strong></div><button class="btn" style="width:100%;margin-top:18px" onclick="openBuyContact(${post.photographerId || "null"}, ${post.price || "null"}, '${(post.car || "").replace(/'/g, "\\'")}', '${post.id || ""}')">Comprar foto</button>` : `<p class="copy" style="margin-top:22px">Este post é público e não está à venda.</p>`}
               <div style="margin-top:30px">
                 <h3>Comentários</h3>
                 <div class="comment-list">
@@ -5488,9 +5442,9 @@
         fd.append("event_date", dataVal);
         fd.append("event_time", document.getElementById("pHorario")?.value || "");
         const visMode = document.querySelector("#visModeGroup .vis-mode-btn.active")?.dataset.mode || "post";
-        if ((visMode === "sale" || visMode === "both") && (!currentUser.cpf || !currentUser.phone)) {
+        if ((visMode === "sale" || visMode === "both") && !currentUser.phone) {
           btn.disabled = false; btn.textContent = "Publicar foto";
-          document.getElementById("uploadStatus").textContent = "⚠ Preencha seu CPF e celular antes de colocar fotos à venda.";
+          document.getElementById("uploadStatus").textContent = "⚠ Preencha seu celular nas configurações de conta antes de colocar fotos à venda.";
           document.getElementById("uploadStatus").style.color = "#c0392b";
           return;
         }
@@ -5707,7 +5661,6 @@
           currentUser.name = user.name;
           currentUser.nickname = user.nickname;
           currentUser.bio = user.bio;
-          if (user.cpf !== undefined) currentUser.cpf = user.cpf || "";
           if (user.phone !== undefined) currentUser.phone = user.phone || "";
           if (user.contact_email !== undefined) currentUser.contactEmail = user.contact_email || "";
           if (user.avatar_url) currentUser.avatar = user.avatar_url.startsWith("http") ? user.avatar_url : API_BASE + user.avatar_url;
@@ -5725,10 +5678,8 @@
         const status = document.getElementById("saveAccountStatus");
         btn.disabled = true; btn.textContent = "Salvando...";
         const fd = new FormData();
-        const cpf = document.getElementById("accCpf")?.value.trim();
         const phone = document.getElementById("accPhone")?.value.trim();
         const contactEmail = document.getElementById("accContactEmail")?.value.trim();
-        if (cpf) fd.append("cpf", cpf);
         if (phone) fd.append("phone", phone);
         if (contactEmail) fd.append("contact_email", contactEmail);
         try {
@@ -5740,7 +5691,6 @@
           });
           if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || "Erro"); }
           const user = await res.json();
-          currentUser.cpf = user.cpf || "";
           currentUser.phone = user.phone || "";
           currentUser.contactEmail = user.contact_email || "";
           status.textContent = "✓ Dados salvos!";
@@ -6239,9 +6189,9 @@
         fd.append("event_date",  v("ep_date")?.trim() || "");
         fd.append("plate",       v("ep_plate")?.trim() || "");
         const epMode = document.querySelector("#ep_vis_group .vis-mode-btn.active")?.dataset.mode || "post";
-        if ((epMode === "sale" || epMode === "both") && (!currentUser.cpf || !currentUser.phone)) {
+        if ((epMode === "sale" || epMode === "both") && !currentUser.phone) {
           btn.disabled = false; btn.textContent = "Salvar alterações";
-          document.getElementById("savePostStatus").textContent = "⚠ Preencha seu CPF e celular antes de colocar fotos à venda.";
+          document.getElementById("savePostStatus").textContent = "⚠ Preencha seu celular nas configurações de conta antes de colocar fotos à venda.";
           document.getElementById("savePostStatus").style.color = "#c0392b";
           return;
         }
@@ -6346,9 +6296,8 @@
         }
 
         if (page === "conta") {
-          const hasCpf = !!(currentUser.cpf);
           const hasPhone = !!(currentUser.phone);
-          const canSell = hasCpf && hasPhone;
+          const canSell = hasPhone;
           view.innerHTML = `
             <section class="container dash-hero"><p class="eyebrow">Fotógrafo</p><h1>Dados da conta.</h1><p class="lead" style="margin-top:18px">Informações de contato e dados obrigatórios para venda.</p></section>
             <section class="container section-slim dash-shell">
@@ -6359,7 +6308,7 @@
                   <span style="font-size:22px">⚠️</span>
                   <div>
                     <p style="font-weight:600;margin:0 0 3px">Cadastro incompleto para venda</p>
-                    <p class="copy" style="margin:0;color:#a94442">Preencha ${!hasCpf && !hasPhone ? "CPF e celular" : !hasCpf ? "o CPF" : "o celular"} abaixo para poder colocar fotos à venda.</p>
+                    <p class="copy" style="margin:0;color:#a94442">Preencha seu celular abaixo para poder colocar fotos à venda.</p>
                   </div>
                 </div>` : `
                 <div style="padding:14px 20px;background:#f0faf4;border:1px solid #b2dfdb;border-radius:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
@@ -6367,19 +6316,16 @@
                   <p style="margin:0;font-weight:600;color:#1b6a4a">Conta verificada — você pode vender fotos.</p>
                 </div>`}
                 <div class="dash-section">
-                  <div class="dash-section-head"><div><p class="eyebrow">Dados de contato</p><h2>Informações para compradores</h2></div></div>
+                  <div class="dash-section-head"><div><p class="eyebrow">Dados de contato</p><h2>Informações da conta</h2></div></div>
                   <div class="form">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-                      <label>CPF <span style="color:#c0392b;font-size:12px">${!hasCpf ? "• obrigatório para venda" : ""}</span>
-                        <input id="accCpf" class="field" placeholder="000.000.000-00" maxlength="14" value="${currentUser.cpf || ""}">
-                      </label>
                       <label>Celular <span style="color:#c0392b;font-size:12px">${!hasPhone ? "• obrigatório para venda" : ""}</span>
                         <input id="accPhone" class="field" placeholder="(00) 00000-0000" maxlength="15" value="${currentUser.phone || ""}">
                       </label>
+                      <label>E-mail de contato
+                        <input id="accContactEmail" class="field" type="email" placeholder="contato@exemplo.com" value="${currentUser.contactEmail || ""}">
+                      </label>
                     </div>
-                    <label>E-mail de contato <span style="color:var(--text-muted);font-size:12px">• exibido ao comprador</span>
-                      <input id="accContactEmail" class="field" type="email" placeholder="contato@exemplo.com" value="${currentUser.contactEmail || ""}">
-                    </label>
                     <button class="btn" id="saveAccountBtn" onclick="saveAccountData()">Salvar dados de contato</button>
                     <p id="saveAccountStatus" style="font-size:14px;color:var(--muted);margin:0"></p>
                   </div>
@@ -6630,7 +6576,7 @@
                 <h2>${photo.title}</h2>
                 ${info(photo)}
                 <div style="margin-top:24px" class="card-row"><span class="copy">Licenca individual</span><span class="price">${money(photo.price)}</span></div>
-                <button class="btn" style="width:100%;margin-top:22px" onclick="openBuyContact(${photo.photographerId || "null"}, ${photo.price || "null"}, '${(photo.title || "").replace(/'/g, "\\'")}')">Comprar agora</button>
+                <button class="btn" style="width:100%;margin-top:22px" onclick="openBuyContact(${photo.photographerId || "null"}, ${photo.price || "null"}, '${(photo.title || "").replace(/'/g, "\\'")}', '${photo.id || ""}')">Comprar agora</button>
               </aside>
             </div>
           </section>
@@ -7401,14 +7347,12 @@
         }
       }
       async function completePhotographerInfo() {
-        const cpf = (document.getElementById("pi-cpf") || {}).value || "";
         const phone = (document.getElementById("pi-phone") || {}).value || "";
         const contactEmail = (document.getElementById("pi-contact-email") || {}).value || "";
         const btn = authModal.querySelector(".btn");
         if (btn) { btn.disabled = true; btn.textContent = "Salvando..."; }
         try {
           const fd = new FormData();
-          if (cpf.trim()) fd.append("cpf", cpf.trim());
           if (phone.trim()) fd.append("phone", phone.trim());
           if (contactEmail.trim()) fd.append("contact_email", contactEmail.trim());
           await apiReq("/api/users/me/profile", { method: "PUT", body: fd });
@@ -7473,7 +7417,7 @@
             home: data.user.account_type === "photographer" ? "vendedor" : "comprador",
             id: data.user.id, account_type: data.user.account_type,
             bio: data.user.bio || "",
-            cpf: data.user.cpf || "", phone: data.user.phone || ""
+            phone: data.user.phone || ""
           };
           await Promise.all([loadFollowing(), loadInteractions()]);
           updateHeader(); closeAuth();
@@ -7544,8 +7488,7 @@
         if (authStep === "photographer-info") {
           return `
             <div class="form">
-              <p style="color:var(--text-muted);font-size:13px;margin-bottom:4px">Essas informações são usadas apenas para verificação e contato comercial.</p>
-              <label>CPF<input id="pi-cpf" placeholder="000.000.000-00" maxlength="14"></label>
+              <p style="color:var(--text-muted);font-size:13px;margin-bottom:4px">Adicione seu celular para poder colocar fotos à venda.</p>
               <label>Celular<input id="pi-phone" placeholder="(00) 00000-0000" maxlength="15"></label>
               <label>E-mail de contato<input id="pi-contact-email" placeholder="contato@exemplo.com" type="email"></label>
               <button class="btn" onclick="completePhotographerInfo()">Finalizar cadastro</button>
@@ -7584,7 +7527,7 @@
               </div>
               <h2 style="margin-top:12px">${photo.title}</h2>
               ${info(photo)}
-              <button class="btn" style="width:100%;margin-top:24px" onclick="openBuyContact(${photo.photographerId || "null"}, ${photo.price || "null"}, '${(photo.title || "").replace(/'/g, "\\'")}')">Comprar</button>
+              <button class="btn" style="width:100%;margin-top:24px" onclick="openBuyContact(${photo.photographerId || "null"}, ${photo.price || "null"}, '${(photo.title || "").replace(/'/g, "\\'")}', '${photo.id || ""}')">Comprar</button>
             </div>
           </div>
         `;
@@ -7658,13 +7601,13 @@
         const existingWarn = group.parentElement.querySelector(".vis-mode-warn");
         if (existingWarn) existingWarn.remove();
 
-        // Gate: photographer must have CPF + phone to sell
+        // Gate: photographer must have phone to sell
         if ((mode === "sale" || mode === "both") && isLoggedIn && currentUser.account_type === "photographer") {
-          if (!currentUser.cpf || !currentUser.phone) {
+          if (!currentUser.phone) {
             const warn = document.createElement("div");
             warn.className = "vis-mode-warn";
             warn.style.cssText = "font-size:13px;color:#a94442;margin-top:10px;padding:12px 16px;background:#fdf2f2;border-radius:12px;border:1px solid #f5c6cb;display:flex;align-items:center;justify-content:space-between;gap:10px";
-            warn.innerHTML = `<span>Para vender fotos preencha seu <strong>CPF</strong> e <strong>celular</strong> antes.</span>
+            warn.innerHTML = `<span>Para vender fotos preencha seu <strong>celular</strong> antes.</span>
               <button onclick="route('vendedor','conta')" style="border:0;background:none;color:#c0392b;font-size:13px;cursor:pointer;padding:0;font-weight:700;white-space:nowrap">Completar agora →</button>`;
             group.after(warn);
             return; // don't activate the button
@@ -7898,7 +7841,6 @@
                 id: user.id,
                 account_type: user.account_type,
                 bio: user.bio || "",
-                cpf: user.cpf || "",
                 phone: user.phone || "",
                 contactEmail: user.contact_email || ""
               };
