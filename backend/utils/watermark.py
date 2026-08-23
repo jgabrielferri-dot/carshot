@@ -14,8 +14,8 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 # ── Configurações do preview protegido ────────────────────────
 PREVIEW_MAX_PX   = 900    # lado maior do preview (px)
 PREVIEW_QUALITY  = 42     # qualidade JPEG (0-95)
-WM_OPACITY       = 160    # opacidade da marca d'água (0-255) — 160 ≈ 63%
-DARKEN_OPACITY   = 90     # overlay escuro sobre a imagem (0-255)
+WM_OPACITY       = 85     # opacidade da marca d'água (0-255) — 85 ≈ 33%
+DARKEN_OPACITY   = 30     # overlay escuro sobre a imagem (0-255)
 WM_TEXT          = "SPOTGRID"
 # ──────────────────────────────────────────────────────────────
 
@@ -72,7 +72,7 @@ def add_watermark(input_path: str, output_path: str) -> None:
     img = Image.alpha_composite(img, dark)
 
     # ── 3. Grade densa de marcas d'água ───────────────────────
-    font_size = max(18, w // 14)          # texto compacto para caber mais repetições
+    font_size = max(16, w // 16)          # texto menor para ser mais sutil
     font = _get_font(font_size)
 
     # Camada de watermark em alta resolução para depois rotacionar
@@ -83,8 +83,8 @@ def add_watermark(input_path: str, output_path: str) -> None:
     tw = bbox[2] - bbox[0]
     th = bbox[3] - bbox[1]
 
-    step_x = tw + 24   # espaçamento reduzido — grade mais densa
-    step_y = th + 20
+    step_x = tw + 45   # espaçamento moderado — visível mas sutil
+    step_y = th + 38
 
     # Duas passagens: texto principal + versão menor entre as linhas
     for pass_idx, (txt, fsize, alpha) in enumerate([
