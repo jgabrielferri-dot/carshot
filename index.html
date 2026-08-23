@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>CarShot — Fotografia Automotiva</title>
+    <title>SpotGrid — Fotografia Automotiva</title>
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#c1121f" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="CarShot" />
+    <meta name="apple-mobile-web-app-title" content="SpotGrid" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
@@ -889,7 +889,7 @@
       }
       .watermark::before,
       .watermark::after {
-        content: "CARSHOT  CARSHOT  CARSHOT  CARSHOT  CARSHOT  CARSHOT";
+        content: "SPOTGRID  SPOTGRID  SPOTGRID  SPOTGRID  SPOTGRID  SPOTGRID";
         position: absolute;
         white-space: nowrap;
         font-size: 13px;
@@ -3118,7 +3118,7 @@
   <body>
     <header class="header">
       <div class="container header-inner">
-        <a class="brand" href="#home" data-route="home" aria-label="CarShot">
+        <a class="brand" href="#home" data-route="home" aria-label="SpotGrid">
           <span class="brand-mark">CS</span>
           <span class="brand-name">Car<span>Shot</span></span>
         </a>
@@ -3151,7 +3151,7 @@
         Voltar
       </button>
     </div>
-    <main id="view"><div style="padding:120px 20px;text-align:center;color:#9b9190;font-family:sans-serif">Carregando CarShot…</div></main>
+    <main id="view"><div style="padding:120px 20px;text-align:center;color:#9b9190;font-family:sans-serif">Carregando SpotGrid…</div></main>
 
     <footer class="site-footer">
       <div class="container">
@@ -3168,12 +3168,12 @@
         <hr class="footer-divider">
         <div class="footer-bottom">
           <div class="footer-copy">
-              <p>© 2026 CarShot. Todos os direitos reservados.</p>
+              <p>© 2026 SpotGrid. Todos os direitos reservados.</p>
               <p style="margin-top:4px">Plataforma de fotografia automotiva — Brasil.</p>
-              <p style="margin-top:8px">Suporte: <a href="mailto:contato@carshot.com.br" style="color:var(--muted);text-decoration:underline">contato@carshot.com.br</a> · Privacidade: <a href="mailto:privacidade@carshot.com.br" style="color:var(--muted);text-decoration:underline">privacidade@carshot.com.br</a></p>
+              <p style="margin-top:8px">Suporte: <a href="mailto:contato@spotgrid.com.br" style="color:var(--muted);text-decoration:underline">contato@spotgrid.com.br</a> · Privacidade: <a href="mailto:privacidade@spotgrid.com.br" style="color:var(--muted);text-decoration:underline">privacidade@spotgrid.com.br</a></p>
             </div>
           <div class="footer-disclaimer">
-            As imagens publicadas são de responsabilidade exclusiva dos fotógrafos cadastrados. A CarShot não detém direitos sobre as fotografias e atua como intermediária entre fotógrafos e compradores. Dados pessoais tratados conforme a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).
+            As imagens publicadas são de responsabilidade exclusiva dos fotógrafos cadastrados. A SpotGrid não detém direitos sobre as fotografias e atua como intermediária entre fotógrafos e compradores. Dados pessoais tratados conforme a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).
           </div>
         </div>
       </div>
@@ -3634,7 +3634,7 @@
       }
 
       // ── Buy contact modal ─────────────────────────────────────
-      const CARSHOT_WPP = "5519982912656";
+      const SPOTGRID_WPP = "5519982912656";
 
       function openBuyContact(photographerId, price, title, photoId) {
         if (!requireLogin()) return;
@@ -3644,8 +3644,8 @@
         const photoUrl = cleanId && cleanId !== "null" && cleanId !== "api-"
           ? `\n\nLink da foto: https://jgabrielferri-dot.github.io/carshot/#post/${cleanId}`
           : "";
-        const msg = `Olá! Tenho interesse em comprar a foto *${title || "sem título"}*${priceText} na CarShot.${photoUrl}`;
-        window.open(`https://wa.me/${CARSHOT_WPP}?text=${encodeURIComponent(msg)}`, "_blank");
+        const msg = `Olá! Tenho interesse em comprar a foto *${title || "sem título"}*${priceText} na SpotGrid.${photoUrl}`;
+        window.open(`https://wa.me/${SPOTGRID_WPP}?text=${encodeURIComponent(msg)}`, "_blank");
       }
 
       // like count cache: { "api-5": 3 }
@@ -3748,7 +3748,7 @@
           <article class="card">
             <button class="photo-wrap" style="width:100%;border:0;background:transparent;padding:0" onclick="openPhoto('${photo.id}')">
               <img src="${photo.image}" alt="${photo.title}">
-              <div class="watermark">CarShot</div>
+              <div class="watermark">SpotGrid</div>
             </button>
             <div class="pad">
               <div class="card-row">
@@ -3778,7 +3778,7 @@
           <button class="gallery-item" onclick="route('post','${post.id}')">
             <img src="${post.image}" alt="${post.car}" loading="lazy">
             ${forSale ? `
-              <div class="watermark">CarShot</div>
+              <div class="watermark">SpotGrid</div>
               <div style="position:absolute;top:10px;left:10px;background:rgba(193,18,31,.92);color:#fff;font-size:11px;font-weight:600;letter-spacing:.06em;padding:3px 9px;border-radius:999px">À VENDA</div>
             ` : post.is_for_sale ? `<div style="position:absolute;top:10px;left:10px;background:rgba(193,18,31,.92);color:#fff;font-size:11px;font-weight:600;letter-spacing:.06em;padding:3px 9px;border-radius:999px">À VENDA</div>` : ""}
             <div class="gallery-overlay">
@@ -3849,7 +3849,7 @@
           <button class="discover-card ${index === 0 || index === 3 ? "large" : ""}" onclick="route('post','${post.id}')" style="position:relative">
             <img src="${post.image}" alt="${post.car}">
             ${forSale ? `
-              <div class="watermark">CarShot</div>
+              <div class="watermark">SpotGrid</div>
               <div style="position:absolute;top:10px;left:10px;background:rgba(193,18,31,.92);color:#fff;font-size:11px;font-weight:600;letter-spacing:.06em;padding:3px 9px;border-radius:999px;z-index:2">À VENDA</div>
             ` : post.is_for_sale ? `<div style="position:absolute;top:10px;left:10px;background:rgba(193,18,31,.92);color:#fff;font-size:11px;font-weight:600;letter-spacing:.06em;padding:3px 9px;border-radius:999px;z-index:2">À VENDA</div>` : ""}
             <span class="discover-info">
@@ -4066,7 +4066,7 @@
               <div class="container hp-process-grid">
                 <div class="hp-process-copy">
                   <h2 class="hp-process-h2">Como uma galeria<br>privada para<br>seu carro.</h2>
-                  <p class="hp-process-desc">A CarShot conecta fotografos automotivos especializados e donos de carros, combinando busca inteligente e downloads seguros.</p>
+                  <p class="hp-process-desc">A SpotGrid conecta fotografos automotivos especializados e donos de carros, combinando busca inteligente e downloads seguros.</p>
                   <div class="hp-steps-list">
                     <div class="hp-step-item">
                       <span class="hp-step-num">01</span>
@@ -4128,7 +4128,7 @@
             <div class="container">
               <p class="eyebrow">Como funciona</p>
               <h1>Da foto no evento ao download em alta resolução.</h1>
-              <p class="lead">A CarShot organiza a jornada entre fotógrafos automotivos e quem quer encontrar imagens do próprio carro, sem depender de mensagens soltas ou redes sociais.</p>
+              <p class="lead">A SpotGrid organiza a jornada entre fotógrafos automotivos e quem quer encontrar imagens do próprio carro, sem depender de mensagens soltas ou redes sociais.</p>
             </div>
           </section>
 
@@ -4193,7 +4193,7 @@
             <div class="home-final">
               <div>
                 <p class="eyebrow">Comece pela descoberta</p>
-                <h2>Encontre uma galeria e veja como a CarShot funciona na prática.</h2>
+                <h2>Encontre uma galeria e veja como a SpotGrid funciona na prática.</h2>
                 <p>Explore eventos recentes ou crie uma conta para vender suas próprias fotos automotivas.</p>
                 <div class="home-final-actions">
                   <button class="btn" onclick="route('explorar')">Explorar galerias</button>
@@ -4285,7 +4285,7 @@
             <div style="margin-left:calc(-1*(100vw - 100%)/2);margin-right:calc(-1*(100vw - 100%)/2);margin-top:-72px;padding:calc(88px + 72px) 0 72px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(248,246,243,.96) 0%,rgba(248,246,243,.78) 40%,rgba(248,246,243,.18) 100%),linear-gradient(0deg,rgba(248,246,243,.9) 0%,rgba(248,246,243,0) 30%),url('https://images.unsplash.com/photo-1546480352-b36b6f5627e4?auto=format&fit=crop&w=1800&q=85') center 60%/cover no-repeat;margin-bottom:36px">
               <div class="container">
                 <p class="eyebrow" style="margin-bottom:10px">Explorar</p>
-                <h1 style="max-width:660px;margin-bottom:24px">Galeria CarShot.</h1>
+                <h1 style="max-width:660px;margin-bottom:24px">Galeria SpotGrid.</h1>
                 <form class="search" style="max-width:600px;margin-bottom:14px" onsubmit="event.preventDefault(); search(this.eq.value)">
                   <input name="eq" placeholder="Placa, marca, modelo, cor ou local…" style="height:52px">
                   <button class="btn" style="min-height:52px">Buscar</button>
@@ -4782,7 +4782,7 @@
                 <div class="post-detail-layout">
                 <div class="detail-image" style="position:relative">
                   <img src="${API_BASE}/api/photos/${p.id}/preview" alt="${p.title}" style="width:100%;border-radius:20px;object-fit:cover">
-                  ${p.is_for_sale && !p.is_public ? `<div class="watermark" style="font-size:32px;color:rgba(255,255,255,.22);border-radius:20px">CarShot</div>` : ""}
+                  ${p.is_for_sale && !p.is_public ? `<div class="watermark" style="font-size:32px;color:rgba(255,255,255,.22);border-radius:20px">SpotGrid</div>` : ""}
                 </div>
                 <aside class="surface pad sidebar">
 
@@ -4987,7 +4987,7 @@
               </div>
               <div style="display:grid;gap:10px">
                 <button class="btn">Seguir fotógrafo</button>
-                <button class="btn btn-secondary" onclick="route('ensaio','${creator.id}')">Solicitar ensaio via CarShot</button>
+                <button class="btn btn-secondary" onclick="route('ensaio','${creator.id}')">Solicitar ensaio via SpotGrid</button>
                 ${isLoggedIn && currentUser.account_type === 'photographer' ? `<button class="btn btn-secondary" onclick="route('editar-perfil')">Editar meu perfil</button>` : ''}
               </div>
             </div>
@@ -5453,7 +5453,7 @@
           <section class="page container" style="max-width:680px">
             <div class="page-title">
               <p class="eyebrow">Candidatura</p>
-              <h1>Venda suas fotos na CarShot.</h1>
+              <h1>Venda suas fotos na SpotGrid.</h1>
               <p class="lead">Preencha o formulário abaixo. Nossa equipe analisa seu portfólio e responde em até <strong>5 dias úteis</strong> pelo e-mail informado.</p>
             </div>
             <div class="surface pad" style="border-radius:24px;border:1px solid var(--line-strong)">
@@ -5523,7 +5523,7 @@
         view.innerHTML = `
           <section class="page container">
             <div class="page-title">
-              <p class="eyebrow">Ensaio via CarShot</p>
+              <p class="eyebrow">Ensaio via SpotGrid</p>
               <h1>Solicitar ensaio com ${creator.name}.</h1>
               <p class="lead">O pedido passa pela plataforma para manter histórico, segurança e organização da conversa.</p>
             </div>
@@ -5545,7 +5545,7 @@
                   <label>Carro<input value="Porsche 911 GT3 RS preto"></label>
                   <label>Local desejado<input placeholder="Ex: Ponte Cidade Jardim"></label>
                   <label>Mensagem<textarea placeholder="Conte o tipo de ensaio que você quer"></textarea></label>
-                  <button class="btn">Enviar solicitação pela CarShot</button>
+                  <button class="btn">Enviar solicitação pela SpotGrid</button>
                 </div>
               </aside>
             </div>
@@ -5876,7 +5876,7 @@
 
         if (page === "conta") {
           view.innerHTML = `
-            <section class="container dash-hero"><p class="eyebrow">Comprador</p><h1>Conta.</h1><p class="lead" style="margin-top:18px">Seus dados pessoais na CarShot.</p></section>
+            <section class="container dash-hero"><p class="eyebrow">Comprador</p><h1>Conta.</h1><p class="lead" style="margin-top:18px">Seus dados pessoais na SpotGrid.</p></section>
             <section class="container section-slim dash-shell">
               ${buyerNav("conta")}
               <div class="dash-content">
@@ -6100,25 +6100,37 @@
 
             <div class="form" style="display:grid;gap:14px">
 
-              <p style="font-size:12px;color:var(--muted);margin-bottom:4px">O título é gerado automaticamente: <em>Marca Modelo Local — Data</em></p>
+              <div id="ep_title_preview" style="padding:10px 14px;background:var(--panel-soft);border-radius:12px;font-size:13px;color:var(--text-muted);margin-bottom:4px">
+                Título: <strong id="ep_title_text">${p.title || "—"}</strong>
+              </div>
               <label>Descrição <textarea id="ep_desc" class="field" style="min-height:72px;padding:12px">${p.description || ""}</textarea></label>
 
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
                 <label>Marca
-                  <select id="ep_brand" class="field" style="width:100%">
+                  <select id="ep_brand" class="field" style="width:100%" onchange="updateEditModels();updateEditTitle()">
                     <option value="">— Selecionar —</option>
-                    ${BRANDS_OPTIONS.map(b => `<option value="${b}" ${p.brand === b ? "selected" : ""}>${b}</option>`).join("")}
+                    ${Object.keys(BRAND_MODELS).sort().map(b => `<option value="${b}" ${p.brand === b ? "selected" : ""}>${b}</option>`).join("")}
                   </select>
                 </label>
-                <label>Modelo <input id="ep_model" class="field" value="${p.model || ""}"></label>
-                <label>Cor <input id="ep_color" class="field" value="${p.color || ""}"></label>
+                <label>Modelo
+                  <select id="ep_model" class="field" style="width:100%" onchange="updateEditTitle()">
+                    <option value="">— Selecionar —</option>
+                    ${p.brand && BRAND_MODELS[p.brand] ? BRAND_MODELS[p.brand].map(m => `<option value="${m}" ${p.model === m ? "selected" : ""}>${m}</option>`).join("") : (p.model ? `<option value="${p.model}" selected>${p.model}</option>` : "")}
+                  </select>
+                </label>
+                <label>Cor
+                  <select id="ep_color" class="field" style="width:100%">
+                    <option value="">— Selecionar —</option>
+                    ${PRESET_COLORS.map(c => `<option value="${c}" ${p.color === c ? "selected" : ""}>${c}</option>`).join("")}
+                  </select>
+                </label>
                 <label>Local
-                  <select id="ep_location" class="field" style="width:100%">
+                  <select id="ep_location" class="field" style="width:100%" onchange="updateEditTitle()">
                     <option value="">— Selecionar —</option>
                     ${LOCATIONS_OPTIONS.map(l => `<option value="${l}" ${p.location === l ? "selected" : ""}>${l}</option>`).join("")}
                   </select>
                 </label>
-                <label>Data do evento <input id="ep_date" class="field" value="${p.event_date || ""}"></label>
+                <label>Data do evento <input id="ep_date" class="field" type="date" value="${p.event_date || ""}" oninput="updateEditTitle()"></label>
                 <label>Placa <input id="ep_plate" class="field" value="${p.plate || ""}" placeholder="Só você vê"></label>
               </div>
 
@@ -6147,6 +6159,27 @@
           </div>`;
         document.body.appendChild(overlay);
         overlay.addEventListener("click", e => { if (e.target === overlay) closeEditPostForm(); });
+      }
+
+      function updateEditModels() {
+        const brand = document.getElementById("ep_brand")?.value;
+        const sel = document.getElementById("ep_model");
+        if (!sel) return;
+        const models = brand && BRAND_MODELS[brand] ? BRAND_MODELS[brand] : [];
+        sel.innerHTML = `<option value="">— Selecionar —</option>` +
+          models.map(m => `<option value="${m}">${m}</option>`).join("");
+      }
+
+      function updateEditTitle() {
+        const brand = document.getElementById("ep_brand")?.value || "";
+        const model = document.getElementById("ep_model")?.value || "";
+        const local = document.getElementById("ep_location")?.value || "";
+        const date  = document.getElementById("ep_date")?.value || "";
+        const dateFmt = date ? new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { day:"2-digit", month:"short", year:"numeric" }) : "";
+        const parts = [brand, model, local].filter(Boolean);
+        const title = parts.length ? parts.join(" ") + (dateFmt ? " — " + dateFmt : "") : "Sem título";
+        const el = document.getElementById("ep_title_text");
+        if (el) el.textContent = title;
       }
 
       function closeEditPostForm() {
@@ -6341,7 +6374,7 @@
           <section class="container dash-hero">
             <p class="eyebrow">Fotógrafo</p>
             <h1>Painel do fotógrafo.</h1>
-            <p class="lead" style="margin-top:18px">Acompanhe cliques, vendas, álbuns automáticos e posts publicados na comunidade CarShot.</p>
+            <p class="lead" style="margin-top:18px">Acompanhe cliques, vendas, álbuns automáticos e posts publicados na comunidade SpotGrid.</p>
           </section>
           <section class="container section-slim dash-shell">
             ${sellerShell("dashboard")}
@@ -6556,7 +6589,7 @@
               Voltar
             </button>
             <div class="split">
-              <div class="card photo-wrap"><img src="${photo.image}" alt="${photo.title}" style="height:680px"><div class="watermark">CarShot</div></div>
+              <div class="card photo-wrap"><img src="${photo.image}" alt="${photo.title}" style="height:680px"><div class="watermark">SpotGrid</div></div>
               <aside class="surface pad sidebar">
                 <p class="eyebrow">Foto</p>
                 <h2>${photo.title}</h2>
@@ -6624,7 +6657,7 @@
               <p class="eyebrow">Resumo</p>
               <h2>Pedido</h2>
               <div class="form" style="margin-top:20px">
-                <label>Cupom<input value="CARSHOT10" placeholder="Inserir cupom"></label>
+                <label>Cupom<input value="SPOTGRID10" placeholder="Inserir cupom"></label>
               </div>
               <div style="margin-top:20px">
                 <div class="summary-row"><span>Subtotal</span><strong>${money(subtotal)}</strong></div>
@@ -6678,21 +6711,21 @@
           termos: {
             eyebrow: "Legal",
             title: "Termos de uso.",
-            intro: "Versão " + TERMS_VERSION + " · Última atualização: julho de 2026. Este documento regula a relação entre a CarShot e seus usuários. Ao criar uma conta ou utilizar qualquer funcionalidade da plataforma, o usuário declara ter lido, compreendido e aceito integralmente estes Termos.",
+            intro: "Versão " + TERMS_VERSION + " · Última atualização: julho de 2026. Este documento regula a relação entre a SpotGrid e seus usuários. Ao criar uma conta ou utilizar qualquer funcionalidade da plataforma, o usuário declara ter lido, compreendido e aceito integralmente estes Termos.",
             sections: [
               ["1. Das Partes e do Objeto",
-               "1.1. A CarShot é uma plataforma digital de intermediação tecnológica, operada por pessoa jurídica constituída sob as leis brasileiras, que conecta fotógrafos automotivos independentes (Vendedores) a usuários interessados em adquirir fotografias em alta resolução (Compradores). " +
-               "1.2. A CarShot não produz, não é autora e não detém direitos autorais sobre nenhuma das fotografias publicadas por Vendedores na plataforma. A CarShot atua exclusivamente como provedora de aplicação de internet, nos termos do art. 5º, VII, da Lei 12.965/2014 (Marco Civil da Internet). " +
-               "1.3. Estes Termos de Uso regulam o acesso e a utilização da plataforma CarShot e constituem contrato eletrônico vinculante entre as partes, com validade jurídica reconhecida pelo art. 107 do Código Civil e pela MP 2.200-2/2001."],
+               "1.1. A SpotGrid é uma plataforma digital de intermediação tecnológica, operada por pessoa jurídica constituída sob as leis brasileiras, que conecta fotógrafos automotivos independentes (Vendedores) a usuários interessados em adquirir fotografias em alta resolução (Compradores). " +
+               "1.2. A SpotGrid não produz, não é autora e não detém direitos autorais sobre nenhuma das fotografias publicadas por Vendedores na plataforma. A SpotGrid atua exclusivamente como provedora de aplicação de internet, nos termos do art. 5º, VII, da Lei 12.965/2014 (Marco Civil da Internet). " +
+               "1.3. Estes Termos de Uso regulam o acesso e a utilização da plataforma SpotGrid e constituem contrato eletrônico vinculante entre as partes, com validade jurídica reconhecida pelo art. 107 do Código Civil e pela MP 2.200-2/2001."],
 
               ["2. Definições",
                "Para os fins deste instrumento, adotam-se as seguintes definições: " +
-               "(a) Plataforma: o conjunto de sistemas, interfaces, APIs e demais recursos digitais disponibilizados pela CarShot; " +
+               "(a) Plataforma: o conjunto de sistemas, interfaces, APIs e demais recursos digitais disponibilizados pela SpotGrid; " +
                "(b) Vendedor ou Fotógrafo: pessoa física ou jurídica devidamente cadastrada que publica fotografias para comercialização; " +
                "(c) Comprador: usuário cadastrado que adquire licença de uso de fotografias por meio da Plataforma; " +
                "(d) Fotografia ou Obra: imagem digital criada pelo Vendedor e publicada na Plataforma; " +
                "(e) Licença Pessoal: autorização não exclusiva, intransferível e limitada concedida ao Comprador para uso da Obra nos termos da Cláusula 11; " +
-               "(f) Comissão: percentual sobre o valor da transação retido pela CarShot em remuneração pelos serviços de intermediação; " +
+               "(f) Comissão: percentual sobre o valor da transação retido pela SpotGrid em remuneração pelos serviços de intermediação; " +
                "(g) Preview: versão da fotografia exibida publicamente com marca d\'água, sem resolução completa; " +
                "(h) Arquivo Original: versão da fotografia em alta resolução, entregue ao Comprador após confirmação do pagamento."],
 
@@ -6706,13 +6739,13 @@
                "4.1. O cadastro exige o fornecimento de nome completo, endereço de e-mail válido e senha com no mínimo 6 (seis) caracteres. Fotógrafos devem também fornecer CPF e telefone celular para habilitação à venda. " +
                "4.2. O usuário é responsável pela veracidade, atualidade e completude de suas informações. Dados falsos ou desatualizados autorizam a suspensão imediata da conta sem aviso prévio. " +
                "4.3. As credenciais de acesso são pessoais e intransferíveis. O usuário é o único responsável pelo uso de sua conta e por todas as ações praticadas a partir dela, ainda que por terceiros. " +
-               "4.4. A CarShot pode, a seu exclusivo critério, recusar o cadastro ou cancelar contas que não atendam aos requisitos destes Termos. " +
+               "4.4. A SpotGrid pode, a seu exclusivo critério, recusar o cadastro ou cancelar contas que não atendam aos requisitos destes Termos. " +
                "4.5. Cada usuário pode manter apenas uma conta ativa. A criação de múltiplas contas para contornar suspensões ou restrições é expressamente vedada e sujeita a bloqueio permanente."],
 
               ["5. Tipos de Usuários e Perfis",
                "5.1. Comprador: usuário que realiza a busca, visualização e aquisição de licenças de fotografias publicadas pelos Vendedores. O Comprador não possui autorização para publicar obras. " +
                "5.2. Vendedor (Fotógrafo): usuário habilitado a publicar fotografias automotivas para comercialização. A habilitação requer CPF verificado e telefone celular cadastrado. " +
-               "5.3. A CarShot pode criar categorias adicionais de usuários ou modificar os perfis existentes, mediante comunicação aos usuários com antecedência mínima de 15 (quinze) dias."],
+               "5.3. A SpotGrid pode criar categorias adicionais de usuários ou modificar os perfis existentes, mediante comunicação aos usuários com antecedência mínima de 15 (quinze) dias."],
 
               ["6. Processo de Compra",
                "6.1. O Comprador pode navegar e visualizar Previews das fotografias disponíveis sem autenticação. A aquisição exige cadastro e login prévios. " +
@@ -6725,27 +6758,27 @@
               ["7. Processo de Venda e Publicação",
                "7.1. O Vendedor pode publicar fotografias mediante preenchimento dos campos obrigatórios: título, marca, modelo, cor do veículo, local da fotografia, data, e definição de preço e visibilidade. " +
                "7.2. O Vendedor é exclusiva e integralmente responsável pelo conteúdo que publica, incluindo a titularidade dos direitos autorais, o cumprimento das obrigações previstas na Cláusula 13 e a veracidade das informações fornecidas. " +
-               "7.3. A CarShot não revisa o conteúdo antes da publicação, atuando como provedora de aplicação nos termos do art. 19 do Marco Civil da Internet. Contudo, reserva-se o direito de remover conteúdos após notificação ou por constatação própria de violação destes Termos. " +
-               "7.4. O Vendedor autoriza a CarShot a exibir Previews das fotografias publicadas, incluindo o uso de marca d\'água, para fins de apresentação na Plataforma, sem que isso implique cessão de direitos autorais."],
+               "7.3. A SpotGrid não revisa o conteúdo antes da publicação, atuando como provedora de aplicação nos termos do art. 19 do Marco Civil da Internet. Contudo, reserva-se o direito de remover conteúdos após notificação ou por constatação própria de violação destes Termos. " +
+               "7.4. O Vendedor autoriza a SpotGrid a exibir Previews das fotografias publicadas, incluindo o uso de marca d\'água, para fins de apresentação na Plataforma, sem que isso implique cessão de direitos autorais."],
 
               ["8. Comissões",
-               "8.1. Sobre cada transação concluída, a CarShot retém uma comissão pelo serviço de intermediação, cujo percentual é informado ao Vendedor no momento da publicação e confirmado antes de cada venda. " +
+               "8.1. Sobre cada transação concluída, a SpotGrid retém uma comissão pelo serviço de intermediação, cujo percentual é informado ao Vendedor no momento da publicação e confirmado antes de cada venda. " +
                "8.2. A comissão é calculada sobre o valor bruto definido pelo Vendedor e deduzida automaticamente no momento do repasse. " +
-               "8.3. O Vendedor declara-se ciente de que a comissão constitui a remuneração da CarShot pelos serviços de infraestrutura, processamento de pagamentos, hospedagem, suporte e intermediação, e que não representa participação nos direitos autorais das obras. " +
-               "8.4. A CarShot se reserva o direito de alterar os percentuais de comissão mediante comunicação ao Vendedor com antecedência mínima de 30 (trinta) dias. As novas condições se aplicarão a publicações realizadas ou renovadas após a data de vigência."],
+               "8.3. O Vendedor declara-se ciente de que a comissão constitui a remuneração da SpotGrid pelos serviços de infraestrutura, processamento de pagamentos, hospedagem, suporte e intermediação, e que não representa participação nos direitos autorais das obras. " +
+               "8.4. A SpotGrid se reserva o direito de alterar os percentuais de comissão mediante comunicação ao Vendedor com antecedência mínima de 30 (trinta) dias. As novas condições se aplicarão a publicações realizadas ou renovadas após a data de vigência."],
 
               ["9. Pagamentos e Repasses",
                "9.1. Os pagamentos são processados por meio de gateway de pagamento integrado à Plataforma, podendo ser realizados via Pix, cartão de crédito ou boleto bancário, conforme opções disponíveis. " +
-               "9.2. A CarShot opera como intermediadora do pagamento e não é a parte vendedora na relação de consumo entre Comprador e Fotógrafo para fins de direitos autorais. " +
+               "9.2. A SpotGrid opera como intermediadora do pagamento e não é a parte vendedora na relação de consumo entre Comprador e Fotógrafo para fins de direitos autorais. " +
                "9.3. O repasse ao Vendedor ocorre no prazo informado no painel do Fotógrafo, após a compensação do pagamento e o decurso do prazo de contestação aplicável ao método de pagamento utilizado. " +
-               "9.4. Casos de chargeback (contestação bancária) serão debitados do saldo do Vendedor após apuração. O Vendedor autoriza expressamente esse débito ao aceitar estes Termos. Em caso de saldo insuficiente, a CarShot pode suspender os repasses futuros até a quitação. " +
-               "9.5. Transações suspeitas de fraude podem ser bloqueadas preventivamente pela CarShot ou pelo processador de pagamentos sem aviso prévio ao Vendedor."],
+               "9.4. Casos de chargeback (contestação bancária) serão debitados do saldo do Vendedor após apuração. O Vendedor autoriza expressamente esse débito ao aceitar estes Termos. Em caso de saldo insuficiente, a SpotGrid pode suspender os repasses futuros até a quitação. " +
+               "9.5. Transações suspeitas de fraude podem ser bloqueadas preventivamente pela SpotGrid ou pelo processador de pagamentos sem aviso prévio ao Vendedor."],
 
               ["10. Cancelamentos e Reembolsos",
                "10.1. O Comprador pode solicitar cancelamento da compra no prazo de até 7 (sete) dias corridos a contar da data da transação, desde que não tenha realizado o download do Arquivo Original, exercendo o direito de arrependimento previsto no art. 49 do Código de Defesa do Consumidor. " +
                "10.2. Após o download do Arquivo Original, o direito de arrependimento não se aplica, conforme art. 49, parágrafo único, do CDC, por se tratar de fornecimento de conteúdo digital cujo acesso foi iniciado pelo Comprador após ciência expressa desta condição. O Comprador declara-se ciente dessa limitação ao finalizar a compra. " +
                "10.3. Reembolsos decorrentes de falha técnica comprovada da Plataforma que impeça o download serão processados integralmente no mesmo meio de pagamento utilizado, em até 10 (dez) dias úteis. " +
-               "10.4. Disputas sobre qualidade ou autoria das fotografias devem ser submetidas ao canal de suporte. A CarShot atuará como facilitadora, sem obrigação de resultado, podendo mediar acordos entre Comprador e Vendedor. " +
+               "10.4. Disputas sobre qualidade ou autoria das fotografias devem ser submetidas ao canal de suporte. A SpotGrid atuará como facilitadora, sem obrigação de resultado, podendo mediar acordos entre Comprador e Vendedor. " +
                "10.5. Reembolsos decorrentes de chargeback bem-sucedido pelo Comprador serão ressarcidos pelo Vendedor, conforme Cláusula 9.4."],
 
               ["11. Licença de Uso das Fotografias",
@@ -6757,10 +6790,10 @@
 
               ["12. Direitos Autorais e Propriedade Intelectual",
                "12.1. Todas as fotografias publicadas na Plataforma são obras protegidas pela Lei de Direitos Autorais (Lei 9.610/1998) e pelas convenções internacionais de que o Brasil é signatário. " +
-               "12.2. A CarShot não reivindica e não adquire quaisquer direitos autorais sobre as fotografias publicadas pelos Vendedores. O conteúdo gerado pelos usuários permanece sob titularidade de seus respectivos autores. " +
-               "12.3. O Vendedor concede à CarShot, exclusivamente para fins operacionais da Plataforma, uma licença gratuita, não exclusiva e revogável para: armazenar, reproduzir, exibir e criar Previews das fotografias; utilizar miniaturas das obras em resultados de busca, feeds e seções de destaque da Plataforma. Essa licença não autoriza a CarShot a sublicenciar, vender ou utilizar as obras fora do contexto da Plataforma. " +
-               "12.4. A marca, o logotipo, o nome comercial, o layout e os sistemas da CarShot são protegidos por direito de propriedade industrial e intelectual. É vedado ao usuário reproduzir, imitar, modificar ou utilizar esses elementos sem autorização expressa e por escrito da CarShot. " +
-               "12.5. Denúncias de violação de direitos autorais devem ser enviadas para juridico@carshot.com.br, com identificação da obra, prova de titularidade e localização do conteúdo infrator."],
+               "12.2. A SpotGrid não reivindica e não adquire quaisquer direitos autorais sobre as fotografias publicadas pelos Vendedores. O conteúdo gerado pelos usuários permanece sob titularidade de seus respectivos autores. " +
+               "12.3. O Vendedor concede à SpotGrid, exclusivamente para fins operacionais da Plataforma, uma licença gratuita, não exclusiva e revogável para: armazenar, reproduzir, exibir e criar Previews das fotografias; utilizar miniaturas das obras em resultados de busca, feeds e seções de destaque da Plataforma. Essa licença não autoriza a SpotGrid a sublicenciar, vender ou utilizar as obras fora do contexto da Plataforma. " +
+               "12.4. A marca, o logotipo, o nome comercial, o layout e os sistemas da SpotGrid são protegidos por direito de propriedade industrial e intelectual. É vedado ao usuário reproduzir, imitar, modificar ou utilizar esses elementos sem autorização expressa e por escrito da SpotGrid. " +
+               "12.5. Denúncias de violação de direitos autorais devem ser enviadas para juridico@spotgrid.com.br, com identificação da obra, prova de titularidade e localização do conteúdo infrator."],
 
               ["13. Obrigações dos Fotógrafos (Vendedores)",
                "13.1. Ao publicar qualquer fotografia na Plataforma, o Fotógrafo declara, garante e se compromete a: " +
@@ -6772,7 +6805,7 @@
                "(f) garantir que as informações de veículo, evento, local e data fornecidas são verídicas e corretas; " +
                "(g) não publicar fotografias obtidas de forma ilícita ou em violação à privacidade, ao domicílio ou à propriedade de terceiros; " +
                "(h) não publicar fotografias de terceiros sem expressa autorização dos respectivos autores. " +
-               "13.2. O Fotógrafo responde civil e criminalmente perante terceiros e perante a CarShot por qualquer violação das obrigações acima, incluindo danos decorrentes de: violação de direito de imagem; tratamento indevido de dados pessoais; infração de direitos autorais; publicação de conteúdo de menor de idade."],
+               "13.2. O Fotógrafo responde civil e criminalmente perante terceiros e perante a SpotGrid por qualquer violação das obrigações acima, incluindo danos decorrentes de: violação de direito de imagem; tratamento indevido de dados pessoais; infração de direitos autorais; publicação de conteúdo de menor de idade."],
 
               ["14. Obrigações dos Compradores",
                "14.1. O Comprador compromete-se a: " +
@@ -6780,7 +6813,7 @@
                "(b) manter o Arquivo Original em ambiente seguro, não o distribuindo, compartilhando ou cedendo a terceiros; " +
                "(c) creditar o fotógrafo sempre que a imagem for publicada em meios digitais pessoais; " +
                "(d) não solicitar estorno indevido junto à operadora de cartão ou instituição financeira após o download do Arquivo Original; " +
-               "(e) reportar imediatamente à CarShot qualquer falha técnica que impeça o acesso ou o download das fotografias adquiridas."],
+               "(e) reportar imediatamente à SpotGrid qualquer falha técnica que impeça o acesso ou o download das fotografias adquiridas."],
 
               ["15. Conteúdo Proibido e Condutas Vedadas",
                "15.1. É vedado publicar ou disponibilizar na Plataforma: " +
@@ -6794,7 +6827,7 @@
                "(h) fotografias de marcas ou propriedades de terceiros sem autorização, quando o uso puder caracterizar violação de marca registrada. " +
                "15.2. São também vedadas as seguintes condutas na Plataforma: " +
                "(a) criar múltiplas contas ou contas com identidade falsa; " +
-               "(b) utilizar bots, scripts, crawlers, scrapers ou qualquer mecanismo automatizado sem autorização prévia e por escrito da CarShot; " +
+               "(b) utilizar bots, scripts, crawlers, scrapers ou qualquer mecanismo automatizado sem autorização prévia e por escrito da SpotGrid; " +
                "(c) realizar engenharia reversa, descompilar, desmontar ou tentar extrair o código-fonte da Plataforma; " +
                "(d) interferir no funcionamento da Plataforma, de seus servidores ou redes; " +
                "(e) praticar qualquer forma de fraude em transações ou no sistema de reputação; " +
@@ -6802,18 +6835,18 @@
 
               ["16. Fraudes, Contas Falsas e Uso Automatizado",
                "16.1. A criação de contas com dados falsos, o uso de identidade de terceiros e a simulação de transações para manipulação de métricas ou do sistema de pagamentos constituem fraude e autorizam o cancelamento imediato e permanente das contas envolvidas, sem prejuízo de notificação às autoridades competentes e de ação de ressarcimento de danos. " +
-               "16.2. O uso de qualquer tecnologia automatizada para raspar (scraping), indexar, copiar ou reproduzir conteúdo da Plataforma é expressamente proibido, salvo mediante contrato específico de parceria tecnológica firmado com a CarShot. " +
-               "16.3. A CarShot emprega sistemas de detecção de comportamento anômalo, podendo bloquear preventivamente acessos suspeitos sem aviso prévio. " +
+               "16.2. O uso de qualquer tecnologia automatizada para raspar (scraping), indexar, copiar ou reproduzir conteúdo da Plataforma é expressamente proibido, salvo mediante contrato específico de parceria tecnológica firmado com a SpotGrid. " +
+               "16.3. A SpotGrid emprega sistemas de detecção de comportamento anômalo, podendo bloquear preventivamente acessos suspeitos sem aviso prévio. " +
                "16.4. O usuário que intentar, ou efetivamente causar, dano à Plataforma por meio de ataques, tentativas de invasão, injeção de código ou qualquer outra forma de sabotagem, responderá nos termos da Lei 12.737/2012 (Lei Carolina Dieckmann) e do Marco Civil da Internet."],
 
               ["17. Moderação e Notice and Takedown",
-               "17.1. A CarShot não revisa o conteúdo antes de sua publicação, conforme o art. 19 do Marco Civil da Internet, não sendo responsável pelo conteúdo de terceiros. " +
-               "17.2. Qualquer pessoa pode notificar a CarShot sobre conteúdo potencialmente ilegal, ofensivo ou em violação a direitos de terceiros, enviando e-mail para juridico@carshot.com.br com: (a) identificação do conteúdo e sua localização na Plataforma; (b) descrição da violação alegada; (c) prova de titularidade do direito violado (quando aplicável); (d) declaração de veracidade das informações prestadas. " +
-               "17.3. A CarShot analisará a notificação em até 5 (cinco) dias úteis. Em caso de violação evidente, o conteúdo poderá ser removido preventivamente durante a análise. " +
-               "17.4. O envio de notificações sabidamente falsas ou com fins de censura indevida sujeitará o notificante à responsabilidade civil pelos danos causados ao Vendedor e à CarShot."],
+               "17.1. A SpotGrid não revisa o conteúdo antes de sua publicação, conforme o art. 19 do Marco Civil da Internet, não sendo responsável pelo conteúdo de terceiros. " +
+               "17.2. Qualquer pessoa pode notificar a SpotGrid sobre conteúdo potencialmente ilegal, ofensivo ou em violação a direitos de terceiros, enviando e-mail para juridico@spotgrid.com.br com: (a) identificação do conteúdo e sua localização na Plataforma; (b) descrição da violação alegada; (c) prova de titularidade do direito violado (quando aplicável); (d) declaração de veracidade das informações prestadas. " +
+               "17.3. A SpotGrid analisará a notificação em até 5 (cinco) dias úteis. Em caso de violação evidente, o conteúdo poderá ser removido preventivamente durante a análise. " +
+               "17.4. O envio de notificações sabidamente falsas ou com fins de censura indevida sujeitará o notificante à responsabilidade civil pelos danos causados ao Vendedor e à SpotGrid."],
 
               ["18. Suspensão e Encerramento de Contas",
-               "18.1. A CarShot pode suspender temporariamente ou encerrar definitivamente contas que: " +
+               "18.1. A SpotGrid pode suspender temporariamente ou encerrar definitivamente contas que: " +
                "(a) publiquem conteúdo em violação a estes Termos ou à legislação brasileira; " +
                "(b) utilizem dados falsos ou identidades de terceiros no cadastro; " +
                "(c) realizem uso automatizado não autorizado da Plataforma; " +
@@ -6821,55 +6854,55 @@
                "(e) pratiquem fraude em transações ou no sistema de pagamentos; " +
                "(f) violem reiteradamente direitos de imagem, privacidade ou direitos autorais de terceiros. " +
                "18.2. O usuário será notificado por e-mail sobre a suspensão e seus motivos, exceto nos casos de fraude comprovada ou risco imediato à segurança da Plataforma, em que a medida poderá ser aplicada sem aviso prévio. " +
-               "18.3. O usuário poderá contestar a suspensão pelo e-mail contato@carshot.com.br no prazo de 15 (quinze) dias. A CarShot analisará o recurso em até 10 (dez) dias úteis. " +
+               "18.3. O usuário poderá contestar a suspensão pelo e-mail contato@spotgrid.com.br no prazo de 15 (quinze) dias. A SpotGrid analisará o recurso em até 10 (dez) dias úteis. " +
                "18.4. O encerramento definitivo da conta não extingue obrigações já contraídas pelo usuário, incluindo o pagamento de comissões, chargebacks e indenizações eventualmente devidas."],
 
               ["19. Exclusão de Conta",
-               "19.1. O usuário pode solicitar a exclusão de sua conta a qualquer momento pela área de configurações da Plataforma ou pelo e-mail contato@carshot.com.br. " +
+               "19.1. O usuário pode solicitar a exclusão de sua conta a qualquer momento pela área de configurações da Plataforma ou pelo e-mail contato@spotgrid.com.br. " +
                "19.2. Dados pessoais serão eliminados em até 30 (trinta) dias da confirmação da solicitação, conforme a LGPD, ressalvados: (a) registros de transações financeiras, mantidos pelo prazo legal de 5 (cinco) anos para fins fiscais e contábeis; (b) logs de acesso, mantidos por 6 (seis) meses conforme o art. 15 do Marco Civil da Internet; (c) dados necessários para defesa em processos judiciais ou administrativos em andamento. " +
                "19.3. Fotografias publicadas pelo Vendedor poderão permanecer na Plataforma se já tiverem sido adquiridas por Compradores, a fim de garantir o cumprimento das licenças concedidas, salvo por decisão judicial em contrário. " +
                "19.4. A exclusão de conta não gera direito a reembolso de comissões já processadas ou de transações concluídas."],
 
               ["20. Responsabilidade da Plataforma",
-               "20.1. A CarShot é responsável por: (a) disponibilizar a infraestrutura tecnológica necessária ao funcionamento da Plataforma; (b) processar os pagamentos por meio do gateway integrado; (c) disponibilizar o Arquivo Original ao Comprador após confirmação do pagamento; (d) manter os Previews das fotografias publicadas pelos Vendedores enquanto as contas estiverem ativas. " +
-               "20.2. A CarShot não se responsabiliza por: (a) a autenticidade, qualidade, originalidade ou adequação das fotografias publicadas pelos Vendedores; (b) o cumprimento pelo Vendedor de suas obrigações legais e contratuais; (c) uso indevido das fotografias pelo Comprador após o download; (d) eventuais disputas de direitos autorais entre Vendedores e terceiros; (e) falhas em gateways de pagamento de terceiros; (f) indisponibilidade da Plataforma por causas de força maior, falha de infraestrutura de terceiros ou manutenção programada."],
+               "20.1. A SpotGrid é responsável por: (a) disponibilizar a infraestrutura tecnológica necessária ao funcionamento da Plataforma; (b) processar os pagamentos por meio do gateway integrado; (c) disponibilizar o Arquivo Original ao Comprador após confirmação do pagamento; (d) manter os Previews das fotografias publicadas pelos Vendedores enquanto as contas estiverem ativas. " +
+               "20.2. A SpotGrid não se responsabiliza por: (a) a autenticidade, qualidade, originalidade ou adequação das fotografias publicadas pelos Vendedores; (b) o cumprimento pelo Vendedor de suas obrigações legais e contratuais; (c) uso indevido das fotografias pelo Comprador após o download; (d) eventuais disputas de direitos autorais entre Vendedores e terceiros; (e) falhas em gateways de pagamento de terceiros; (f) indisponibilidade da Plataforma por causas de força maior, falha de infraestrutura de terceiros ou manutenção programada."],
 
               ["21. Limitação de Responsabilidade",
-               "21.1. Na extensão máxima permitida pela legislação aplicável, a responsabilidade total da CarShot perante qualquer usuário, por quaisquer danos decorrentes da utilização da Plataforma, limita-se ao valor efetivamente pago pelo Comprador na transação que originou o dano. " +
-               "21.2. A CarShot não é responsável por danos indiretos, lucros cessantes, perda de oportunidades, danos à reputação ou danos punitivos, salvo nos casos expressamente previstos em lei ou decorrentes de dolo comprovado da CarShot. " +
+               "21.1. Na extensão máxima permitida pela legislação aplicável, a responsabilidade total da SpotGrid perante qualquer usuário, por quaisquer danos decorrentes da utilização da Plataforma, limita-se ao valor efetivamente pago pelo Comprador na transação que originou o dano. " +
+               "21.2. A SpotGrid não é responsável por danos indiretos, lucros cessantes, perda de oportunidades, danos à reputação ou danos punitivos, salvo nos casos expressamente previstos em lei ou decorrentes de dolo comprovado da SpotGrid. " +
                "21.3. Esta limitação não exclui nem restringe os direitos dos consumidores previstos no Código de Defesa do Consumidor (Lei 8.078/1990)."],
 
               ["22. Força Maior e Disponibilidade",
-               "22.1. A CarShot não responde por falhas, atrasos ou indisponibilidade da Plataforma decorrentes de: ataques cibernéticos (DDoS, ransomware); falhas em provedores de infraestrutura ou telecomunicações; pandemias, calamidades públicas ou eventos de força maior (Código Civil, art. 393); determinações judiciais ou regulatórias. " +
-               "22.2. A CarShot envidará esforços razoáveis para manter a Plataforma disponível 24 horas por dia, 7 dias por semana, mas não garante disponibilidade ininterrupta. Manutenções programadas serão comunicadas com antecedência mínima de 24 horas, salvo em casos de urgência técnica."],
+               "22.1. A SpotGrid não responde por falhas, atrasos ou indisponibilidade da Plataforma decorrentes de: ataques cibernéticos (DDoS, ransomware); falhas em provedores de infraestrutura ou telecomunicações; pandemias, calamidades públicas ou eventos de força maior (Código Civil, art. 393); determinações judiciais ou regulatórias. " +
+               "22.2. A SpotGrid envidará esforços razoáveis para manter a Plataforma disponível 24 horas por dia, 7 dias por semana, mas não garante disponibilidade ininterrupta. Manutenções programadas serão comunicadas com antecedência mínima de 24 horas, salvo em casos de urgência técnica."],
 
               ["23. Privacidade e Proteção de Dados (LGPD)",
                "23.1. O tratamento de dados pessoais na Plataforma é regido pela Política de Privacidade e pela Lei 13.709/2018 (LGPD), incorporadas a estes Termos por referência. " +
                "23.2. O aceite destes Termos implica consentimento para o tratamento de dados pessoais nas finalidades e condições descritas na Política de Privacidade. O consentimento é registrado com identificação do usuário, data, hora e versão do documento. " +
-               "23.3. O usuário pode exercer seus direitos como titular de dados pessoais (acesso, correção, portabilidade, eliminação, revogação de consentimento) pelo e-mail privacidade@carshot.com.br, com resposta em até 15 (quinze) dias. " +
-               "23.4. Em caso de incidente de segurança que possa afetar titulares de dados, a CarShot notificará a ANPD e os usuários afetados no prazo e nas condições exigidos pela LGPD."],
+               "23.3. O usuário pode exercer seus direitos como titular de dados pessoais (acesso, correção, portabilidade, eliminação, revogação de consentimento) pelo e-mail privacidade@spotgrid.com.br, com resposta em até 15 (quinze) dias. " +
+               "23.4. Em caso de incidente de segurança que possa afetar titulares de dados, a SpotGrid notificará a ANPD e os usuários afetados no prazo e nas condições exigidos pela LGPD."],
 
               ["24. Segurança",
-               "24.1. A CarShot adota medidas técnicas e organizacionais para proteger os dados e o conteúdo armazenados na Plataforma, incluindo criptografia de senhas (bcrypt), autenticação por token com expiração e controle de acesso por perfil. " +
-               "24.2. O usuário é responsável por manter sua senha segura e por encerrar sessões em dispositivos compartilhados. Em caso de suspeita de acesso não autorizado, deve comunicar imediatamente a CarShot pelo e-mail contato@carshot.com.br. " +
+               "24.1. A SpotGrid adota medidas técnicas e organizacionais para proteger os dados e o conteúdo armazenados na Plataforma, incluindo criptografia de senhas (bcrypt), autenticação por token com expiração e controle de acesso por perfil. " +
+               "24.2. O usuário é responsável por manter sua senha segura e por encerrar sessões em dispositivos compartilhados. Em caso de suspeita de acesso não autorizado, deve comunicar imediatamente a SpotGrid pelo e-mail contato@spotgrid.com.br. " +
                "24.3. É vedado tentar comprometer a segurança da Plataforma por qualquer meio. Tentativas de invasão, exploração de vulnerabilidades ou ataques ao sistema serão tratadas como crimes nos termos da Lei 12.737/2012."],
 
               ["25. Alterações dos Termos",
-               "25.1. A CarShot pode revisar e atualizar estes Termos a qualquer tempo. Alterações relevantes serão comunicadas ao usuário por e-mail e/ou por notificação na Plataforma com antecedência mínima de 15 (quinze) dias. " +
+               "25.1. A SpotGrid pode revisar e atualizar estes Termos a qualquer tempo. Alterações relevantes serão comunicadas ao usuário por e-mail e/ou por notificação na Plataforma com antecedência mínima de 15 (quinze) dias. " +
                "25.2. A versão vigente dos Termos é sempre identificada pela data de última atualização no cabeçalho deste documento. " +
                "25.3. O uso continuado da Plataforma após a data de vigência das alterações implica aceitação dos novos termos. Caso o usuário não concorde com as alterações, deverá encerrar sua conta antes da data de vigência. " +
                "25.4. O sistema registrará o aceite da nova versão com identificação do usuário, data e hora, como prova de consentimento informado."],
 
               ["26. Disposições Gerais",
                "26.1. Estes Termos constituem o acordo integral entre as partes e substituem quaisquer acordos anteriores sobre o mesmo objeto. " +
-               "26.2. A eventual tolerância da CarShot em relação a descumprimentos destes Termos não constituirá novação, renúncia de direitos ou precedente. " +
+               "26.2. A eventual tolerância da SpotGrid em relação a descumprimentos destes Termos não constituirá novação, renúncia de direitos ou precedente. " +
                "26.3. Se qualquer cláusula destes Termos for considerada inválida ou inaplicável por decisão judicial, as demais cláusulas permanecerão em plena vigência. " +
                "26.4. Estes Termos são regidos pelas leis da República Federativa do Brasil, em especial pelo Código Civil, pelo Código de Defesa do Consumidor, pela Lei 9.610/1998 (Direitos Autorais), pela Lei 12.965/2014 (Marco Civil da Internet) e pela Lei 13.709/2018 (LGPD). " +
-               "26.5. Para notificações e comunicações oficiais: juridico@carshot.com.br."],
+               "26.5. Para notificações e comunicações oficiais: juridico@spotgrid.com.br."],
 
               ["27. Foro Competente",
-               "27.1. Para dirimir questões decorrentes destes Termos nas relações de consumo entre Comprador e CarShot, fica eleito o foro do domicílio do Comprador consumidor, nos termos do art. 101, inciso I, do Código de Defesa do Consumidor. " +
-               "27.2. Para as relações entre Fotógrafos (Vendedores) e a CarShot, fica eleito o foro da Comarca de São Paulo, Estado de São Paulo, com exclusão de qualquer outro, por mais privilegiado que seja. " +
+               "27.1. Para dirimir questões decorrentes destes Termos nas relações de consumo entre Comprador e SpotGrid, fica eleito o foro do domicílio do Comprador consumidor, nos termos do art. 101, inciso I, do Código de Defesa do Consumidor. " +
+               "27.2. Para as relações entre Fotógrafos (Vendedores) e a SpotGrid, fica eleito o foro da Comarca de São Paulo, Estado de São Paulo, com exclusão de qualquer outro, por mais privilegiado que seja. " +
                "27.3. As partes elegem a mediação como método preferencial de resolução de conflitos antes do acionamento do Poder Judiciário, podendo recorrer a câmaras arbitrais de reconhecida idoneidade."]
             ]
           },
@@ -6877,13 +6910,13 @@
           privacidade: {
             eyebrow: "Privacidade",
             title: "Política de privacidade.",
-            intro: "Versão " + TERMS_VERSION + " · Última atualização: julho de 2026. Este documento descreve como a CarShot coleta, utiliza, armazena, compartilha e protege seus dados pessoais, em conformidade com a Lei 13.709/2018 (LGPD) e demais normas aplicáveis.",
+            intro: "Versão " + TERMS_VERSION + " · Última atualização: julho de 2026. Este documento descreve como a SpotGrid coleta, utiliza, armazena, compartilha e protege seus dados pessoais, em conformidade com a Lei 13.709/2018 (LGPD) e demais normas aplicáveis.",
             sections: [
               ["1. Controlador dos Dados",
-               "A CarShot, pessoa jurídica de direito privado constituída sob as leis brasileiras, é a Controladora dos dados pessoais tratados por meio da Plataforma, conforme definição do art. 5º, VI, da LGPD. Canal de contato para assuntos de privacidade: privacidade@carshot.com.br."],
+               "A SpotGrid, pessoa jurídica de direito privado constituída sob as leis brasileiras, é a Controladora dos dados pessoais tratados por meio da Plataforma, conforme definição do art. 5º, VI, da LGPD. Canal de contato para assuntos de privacidade: privacidade@spotgrid.com.br."],
 
               ["2. Dados Coletados e Finalidades",
-               "A CarShot coleta e trata os seguintes dados: " +
+               "A SpotGrid coleta e trata os seguintes dados: " +
                "(a) Dados de cadastro — nome, e-mail e senha: necessários para criação e autenticação da conta. Base legal: execução de contrato (LGPD art. 7º, V). " +
                "(b) Dados do Fotógrafo — CPF, telefone e e-mail de contato: usados para verificação de identidade, habilitação à venda e cumprimento de obrigações fiscais. Base legal: execução de contrato e cumprimento de obrigação legal (LGPD art. 7º, V e II). " +
                "(c) Placa veicular: usada exclusivamente como critério de busca interna para correspondência entre fotografias e proprietários de veículos. Nunca é exibida publicamente. Base legal: consentimento (LGPD art. 7º, I). " +
@@ -6892,18 +6925,18 @@
                "(f) Dados técnicos — endereço IP, logs de acesso, dispositivo, navegador: necessários para segurança e melhoria do serviço. Base legal: legítimo interesse e cumprimento de obrigação legal (Marco Civil, art. 15)."],
 
               ["3. Placa Veicular — Tratamento Especial",
-               "A placa de identificação veicular é um dado pessoal indireto, pois permite a identificação do proprietário do veículo por meio de consulta a cadastros públicos (DENATRAN/SENATRAN). Em razão disso, a CarShot adota medidas específicas de proteção: " +
+               "A placa de identificação veicular é um dado pessoal indireto, pois permite a identificação do proprietário do veículo por meio de consulta a cadastros públicos (DENATRAN/SENATRAN). Em razão disso, a SpotGrid adota medidas específicas de proteção: " +
                "(a) A placa é armazenada em campo segregado, não vinculado à exibição pública das fotografias; " +
                "(b) O campo de placa não é exibido a Compradores, visitantes ou terceiros em nenhuma hipótese; " +
                "(c) A busca por placa requer autenticação; " +
-               "(d) O proprietário do veículo, ainda que não seja usuário cadastrado, pode solicitar a eliminação de qualquer registro de placa pelo e-mail privacidade@carshot.com.br."],
+               "(d) O proprietário do veículo, ainda que não seja usuário cadastrado, pode solicitar a eliminação de qualquer registro de placa pelo e-mail privacidade@spotgrid.com.br."],
 
               ["4. Compartilhamento de Dados",
-               "A CarShot compartilha dados pessoais nas seguintes situações: " +
+               "A SpotGrid compartilha dados pessoais nas seguintes situações: " +
                "(a) Provedores de serviços — empresas de armazenamento em nuvem, processadores de pagamento e serviços de e-mail transacional, todos contratualmente obrigados a proteger os dados nos padrões da LGPD; " +
-               "(b) Autoridades públicas — quando exigido por lei, regulamento ou ordem judicial, sendo que a CarShot notificará o usuário sempre que legalmente possível; " +
+               "(b) Autoridades públicas — quando exigido por lei, regulamento ou ordem judicial, sendo que a SpotGrid notificará o usuário sempre que legalmente possível; " +
                "(c) Sucessores — em caso de fusão, aquisição ou reorganização societária, os dados serão transferidos ao sucessor, que assumirá as mesmas obrigações desta Política. " +
-               "A CarShot não vende, aluga nem cede dados pessoais a terceiros para fins publicitários."],
+               "A SpotGrid não vende, aluga nem cede dados pessoais a terceiros para fins publicitários."],
 
               ["5. Transferência Internacional de Dados",
                "Dados pessoais podem ser armazenados ou processados em servidores localizados fora do Brasil, exclusivamente em países ou organizações que ofereçam grau de proteção adequado, ou mediante adoção de cláusulas contratuais padrão, conforme o art. 33 da LGPD."],
@@ -6916,7 +6949,7 @@
                "Após o término da retenção, os dados são eliminados de forma segura ou anonimizados."],
 
               ["7. Direitos do Titular (LGPD art. 18)",
-               "O titular de dados pessoais tem os seguintes direitos, exercíveis a qualquer tempo pelo e-mail privacidade@carshot.com.br: " +
+               "O titular de dados pessoais tem os seguintes direitos, exercíveis a qualquer tempo pelo e-mail privacidade@spotgrid.com.br: " +
                "(a) Confirmação da existência de tratamento; " +
                "(b) Acesso aos dados tratados; " +
                "(c) Correção de dados incompletos, inexatos ou desatualizados; " +
@@ -6925,23 +6958,23 @@
                "(f) Eliminação dos dados tratados com base no consentimento; " +
                "(g) Informação sobre entidades com as quais os dados foram compartilhados; " +
                "(h) Revogação do consentimento a qualquer tempo, sem prejuízo da licitude dos tratamentos realizados antes da revogação. " +
-               "A CarShot responderá às solicitações em até 15 (quinze) dias corridos."],
+               "A SpotGrid responderá às solicitações em até 15 (quinze) dias corridos."],
 
               ["8. Segurança dos Dados",
-               "A CarShot adota medidas técnicas e organizacionais adequadas para proteger os dados pessoais contra acesso não autorizado, perda, alteração ou destruição, incluindo: armazenamento de senhas com algoritmo bcrypt; comunicações via HTTPS (TLS); autenticação por token JWT com prazo de expiração; controle de acesso por perfil de usuário; acesso ao Arquivo Original restrito ao Comprador autenticado. " +
-               "Em caso de incidente de segurança com potencial de causar risco ou dano aos titulares, a CarShot notificará a ANPD e os titulares afetados no prazo e nas condições determinados pela LGPD."],
+               "A SpotGrid adota medidas técnicas e organizacionais adequadas para proteger os dados pessoais contra acesso não autorizado, perda, alteração ou destruição, incluindo: armazenamento de senhas com algoritmo bcrypt; comunicações via HTTPS (TLS); autenticação por token JWT com prazo de expiração; controle de acesso por perfil de usuário; acesso ao Arquivo Original restrito ao Comprador autenticado. " +
+               "Em caso de incidente de segurança com potencial de causar risco ou dano aos titulares, a SpotGrid notificará a ANPD e os titulares afetados no prazo e nas condições determinados pela LGPD."],
 
               ["9. Cookies e Tecnologias Similares",
-               "A CarShot utiliza cookies e tecnologias de rastreamento da seguinte forma: " +
+               "A SpotGrid utiliza cookies e tecnologias de rastreamento da seguinte forma: " +
                "(a) Cookies essenciais: necessários para autenticação, manutenção de sessão e funcionamento básico da Plataforma. Não podem ser desativados sem comprometer o funcionamento. Base legal: execução de contrato. " +
                "(b) Cookies analíticos: utilizados para compreender o comportamento de uso e melhorar a Plataforma. Dependem do consentimento do usuário, obtido por meio do banner de cookies. Base legal: consentimento. " +
                "O usuário pode gerenciar preferências de cookies pelo banner exibido no primeiro acesso ou pelas configurações do navegador."],
 
               ["10. Encarregado de Dados (DPO)",
-               "O Encarregado de Proteção de Dados (DPO) é o canal de comunicação entre a CarShot, os titulares de dados e a Autoridade Nacional de Proteção de Dados (ANPD). Contato: privacidade@carshot.com.br."],
+               "O Encarregado de Proteção de Dados (DPO) é o canal de comunicação entre a SpotGrid, os titulares de dados e a Autoridade Nacional de Proteção de Dados (ANPD). Contato: privacidade@spotgrid.com.br."],
 
               ["11. Menores de Idade",
-               "A CarShot não coleta intencionalmente dados de menores de 18 anos. O cadastro é restrito a maiores de idade. Caso um menor de idade tenha criado conta, o responsável legal deve notificar a CarShot pelo e-mail privacidade@carshot.com.br para eliminação imediata dos dados, conforme o art. 14 da LGPD."],
+               "A SpotGrid não coleta intencionalmente dados de menores de 18 anos. O cadastro é restrito a maiores de idade. Caso um menor de idade tenha criado conta, o responsável legal deve notificar a SpotGrid pelo e-mail privacidade@spotgrid.com.br para eliminação imediata dos dados, conforme o art. 14 da LGPD."],
 
               ["12. Alterações desta Política",
                "Esta Política pode ser atualizada. Em caso de alterações materiais no tratamento de dados, os usuários serão notificados por e-mail com antecedência mínima de 15 (quinze) dias. O uso continuado da Plataforma após a data de vigência das alterações implica aceite da nova Política."]
@@ -6951,7 +6984,7 @@
           autorizacao: {
             eyebrow: "Autorização",
             title: "Política de imagens, placas e veículos.",
-            intro: "Versão " + TERMS_VERSION + " · Este documento estabelece as regras específicas sobre publicação, tratamento e comercialização de fotografias automotivas na plataforma CarShot, com foco na proteção de dados pessoais, direitos de imagem e privacidade.",
+            intro: "Versão " + TERMS_VERSION + " · Este documento estabelece as regras específicas sobre publicação, tratamento e comercialização de fotografias automotivas na plataforma SpotGrid, com foco na proteção de dados pessoais, direitos de imagem e privacidade.",
             sections: [
               ["1. Fundamento Legal",
                "Esta Política fundamenta-se no Código Civil (art. 20 — direito de imagem), na Lei 13.709/2018 (LGPD), na Lei 9.610/1998 (Direitos Autorais) e no Código de Trânsito Brasileiro, que torna a placa veicular um dado de identificação indireta do proprietário. A adoção dessas regras visa proteger tanto os titulares dos dados quanto os fotógrafos e a plataforma."],
@@ -6960,7 +6993,7 @@
                "2.1. O fotógrafo DEVE cadastrar a placa do veículo no campo interno da plataforma para permitir que o proprietário encontre a fotografia por meio da busca. " +
                "2.2. A placa jamais será exibida publicamente em nenhuma seção da plataforma — nem na publicação, nem no feed, nem nos álbuns. " +
                "2.3. O dado de placa é acessível exclusivamente pelo sistema de busca autenticada da plataforma. " +
-               "2.4. Proprietários de veículos que não sejam usuários cadastrados podem solicitar a eliminação de qualquer registro de placa de seu veículo pelo e-mail privacidade@carshot.com.br, independentemente de cadastro."],
+               "2.4. Proprietários de veículos que não sejam usuários cadastrados podem solicitar a eliminação de qualquer registro de placa de seu veículo pelo e-mail privacidade@spotgrid.com.br, independentemente de cadastro."],
 
               ["3. Obrigatoriedade de Ocultação da Placa nas Imagens",
                "3.1. Toda fotografia publicada na plataforma DEVE ter a placa do veículo ocultada na imagem (borrada, pixelada, coberta ou recortada) de forma que não seja legível. " +
@@ -6971,7 +7004,7 @@
                "4.1. Em fotografias realizadas em vias públicas, logradouros ou espaços sem caráter de evento automotivo organizado: rostos de pessoas identificáveis DEVEM ser ocultados (borrados ou pixelados) antes do upload, salvo quando o retratado tiver concedido consentimento expresso, livre e documentado. " +
                "4.2. Em eventos automotivos organizados e de acesso público (track days, encontros, exposições, corridas, shows de carros): a ocultação de rostos não é obrigatória para pessoas em segundo plano ou incidentais à cena, desde que o sujeito principal da fotografia seja o veículo e não a pessoa. " +
                "4.3. Em nenhuma hipótese, em nenhum contexto, é permitida a publicação de imagens que possibilitem a identificação de crianças ou adolescentes. " +
-               "4.4. O fotógrafo deve manter registro do consentimento quando aplicável e apresentá-lo à CarShot ou a autoridades competentes quando solicitado."],
+               "4.4. O fotógrafo deve manter registro do consentimento quando aplicável e apresentá-lo à SpotGrid ou a autoridades competentes quando solicitado."],
 
               ["5. Propriedades Privadas e Propriedade Intelectual",
                "5.1. Fotografias realizadas em propriedades privadas exigem autorização prévia e por escrito do proprietário ou responsável pelo local. " +
@@ -6979,18 +7012,18 @@
                "5.3. Fotografias de interiores de veículos que exibam logotipos, marcas ou elementos de design protegidos devem ser analisadas caso a caso quanto ao risco de violação de propriedade industrial."],
 
               ["6. Marca D\'água e Preview Público",
-               "6.1. Fotografias disponíveis para venda exibem um Preview com marca d\'água da CarShot, garantindo a proteção da obra antes da aquisição. " +
+               "6.1. Fotografias disponíveis para venda exibem um Preview com marca d\'água da SpotGrid, garantindo a proteção da obra antes da aquisição. " +
                "6.2. O Arquivo Original em alta resolução é entregue exclusivamente ao Comprador após confirmação do pagamento. " +
                "6.3. Fotografias marcadas como \'públicas e à venda\' simultaneamente devem, ainda assim, ter marca d\'água aplicada ao preview público para proteção do conteúdo."],
 
               ["7. Pedidos de Remoção",
-               "7.1. Proprietários de veículos, pessoas retratadas ou titulares de direitos autorais podem solicitar a revisão, ocultação ou remoção de conteúdo mediante envio de pedido fundamentado para juridico@carshot.com.br, com: (a) identificação do conteúdo e sua localização; (b) descrição do direito violado; (c) documentação comprobatória da titularidade do direito. " +
-               "7.2. A CarShot analisará o pedido em até 5 (cinco) dias úteis e poderá remover preventivamente o conteúdo durante a análise em casos de risco evidente. " +
+               "7.1. Proprietários de veículos, pessoas retratadas ou titulares de direitos autorais podem solicitar a revisão, ocultação ou remoção de conteúdo mediante envio de pedido fundamentado para juridico@spotgrid.com.br, com: (a) identificação do conteúdo e sua localização; (b) descrição do direito violado; (c) documentação comprobatória da titularidade do direito. " +
+               "7.2. A SpotGrid analisará o pedido em até 5 (cinco) dias úteis e poderá remover preventivamente o conteúdo durante a análise em casos de risco evidente. " +
                "7.3. Decisões de remoção são comunicadas ao Fotógrafo por e-mail com indicação do motivo, assegurado o direito de contestação em 5 (cinco) dias."],
 
               ["8. Responsabilidade do Fotógrafo por Violações",
                "8.1. O fotógrafo é o único e exclusivo responsável pelo cumprimento desta Política e pela observância dos direitos de imagem, privacidade e autoria nas fotografias que publica. " +
-               "8.2. A CarShot reserva-se o direito de regresso contra o fotógrafo por quaisquer danos, perdas, multas ou indenizações que venha a suportar em razão de violações cometidas pelo fotógrafo. " +
+               "8.2. A SpotGrid reserva-se o direito de regresso contra o fotógrafo por quaisquer danos, perdas, multas ou indenizações que venha a suportar em razão de violações cometidas pelo fotógrafo. " +
                "8.3. O fotógrafo que reiteradamente publicar conteúdo em violação a esta Política terá sua conta suspensa definitivamente, sem direito a reembolso de valores em aberto, salvo os referentes a transações já concluídas."]
             ]
           }
@@ -7034,7 +7067,7 @@
               <div class="about-thesis">
                 <p class="about-kicker">Nossa tese</p>
                 <h2>Existe uma comunidade enorme de fotógrafos automotivos criando conteúdo de valor — mas a monetização ainda é informal, fragmentada e dependente de redes sociais.</h2>
-                <p>A CarShot organiza esse mercado em uma plataforma simples, segura e escalável — conectando quem fotografa a quem quer encontrar imagens do próprio carro em eventos, pistas e encontros.</p>
+                <p>A SpotGrid organiza esse mercado em uma plataforma simples, segura e escalável — conectando quem fotografa a quem quer encontrar imagens do próprio carro em eventos, pistas e encontros.</p>
               </div>
             </section>
 
@@ -7063,13 +7096,13 @@
                 <div class="about-split">
                   <p class="about-kicker">Para fotógrafos</p>
                   <h3>Monetize sua arte</h3>
-                  <p>Você fotografa eventos automotivos por paixão. A CarShot permite monetizar esse trabalho de forma profissional, sem depender de DMs ou acordos informais.</p>
+                  <p>Você fotografa eventos automotivos por paixão. A SpotGrid permite monetizar esse trabalho de forma profissional, sem depender de DMs ou acordos informais.</p>
                   <button class="about-action" data-auth="choice">Começar a vender</button>
                 </div>
                 <div class="about-split">
                   <p class="about-kicker">Para entusiastas</p>
                   <h3>Encontre seu carro</h3>
-                  <p>Você esteve no track day, no encontro ou no Cars & Coffee — e sabe que tem fotos incríveis do seu carro por aí. A CarShot reúne tudo em um só lugar.</p>
+                  <p>Você esteve no track day, no encontro ou no Cars & Coffee — e sabe que tem fotos incríveis do seu carro por aí. A SpotGrid reúne tudo em um só lugar.</p>
                   <button class="about-action secondary" onclick="route('explorar')">Buscar minhas fotos</button>
                 </div>
               </div>
@@ -7080,7 +7113,7 @@
                 <div>
                   <p class="about-kicker">Faça parte</p>
                   <h2>Junte-se à comunidade</h2>
-                  <p>Seja fotógrafo ou entusiasta, a CarShot é para você.</p>
+                  <p>Seja fotógrafo ou entusiasta, a SpotGrid é para você.</p>
                   <div class="about-cta-actions">
                     <button class="about-action" data-auth="choice">Criar conta grátis</button>
                     <button class="about-action secondary" onclick="route('explorar')">Explorar</button>
@@ -7168,7 +7201,7 @@
 
       // ── Controle de aceite de termos ─────────────────────────────────────────
       function _termsKey(userId) {
-        return "carshot_terms_" + TERMS_VERSION + "_" + (userId || "anon");
+        return "spotgrid_terms_" + TERMS_VERSION + "_" + (userId || "anon");
       }
       function hasAcceptedTerms(userId) {
         try {
@@ -7196,7 +7229,7 @@
       function showTermsWall(userId, onAccept) {
         const wall = document.getElementById("termsWall");
         if (!wall) { if (onAccept) onAccept(); return; }
-        const isUpdate = !!localStorage.getItem("carshot_terms_prev_user_" + (userId || "anon"));
+        const isUpdate = !!localStorage.getItem("spotgrid_terms_prev_user_" + (userId || "anon"));
         wall.innerHTML = `
           <div class="terms-wall-card">
             <div class="terms-wall-head">
@@ -7205,11 +7238,11 @@
               ${isUpdate ? '<p style="font-size:13px;color:var(--muted);margin:6px 0 0">Versão ' + TERMS_VERSION + ' — revisamos cláusulas sobre licenciamento e proteção de dados.</p>' : '<p style="font-size:13px;color:var(--muted);margin:6px 0 0">Versão ' + TERMS_VERSION + ' · Julho de 2026</p>'}
             </div>
             <div class="terms-wall-body">
-              <h3>O que é a CarShot</h3>
-              <p>A CarShot é uma plataforma de intermediação tecnológica que conecta fotógrafos automotivos independentes a compradores interessados em adquirir imagens em alta resolução de seus veículos. A CarShot não produz nem é autora de qualquer fotografia publicada na plataforma.</p>
+              <h3>O que é a SpotGrid</h3>
+              <p>A SpotGrid é uma plataforma de intermediação tecnológica que conecta fotógrafos automotivos independentes a compradores interessados em adquirir imagens em alta resolução de seus veículos. A SpotGrid não produz nem é autora de qualquer fotografia publicada na plataforma.</p>
 
               <h3>Sobre o pagamento e a comissão</h3>
-              <p>As transações de compra e venda ocorrem por meio da plataforma. A CarShot retém uma comissão sobre cada venda, repassando o valor líquido ao fotógrafo. O comprador recebe acesso ao download da imagem após a confirmação do pagamento.</p>
+              <p>As transações de compra e venda ocorrem por meio da plataforma. A SpotGrid retém uma comissão sobre cada venda, repassando o valor líquido ao fotógrafo. O comprador recebe acesso ao download da imagem após a confirmação do pagamento.</p>
 
               <h3>Licença de uso das fotografias</h3>
               <p>A aquisição de uma fotografia concede ao comprador uma licença de uso pessoal, não exclusiva e intransferível. É vedada a revenda, sublicenciamento, redistribuição ou qualquer uso comercial da imagem sem autorização expressa do fotógrafo. Os direitos autorais permanecem integralmente com o autor da obra (Lei 9.610/1998).</p>
@@ -7218,23 +7251,23 @@
               <p>O fotógrafo declara ser autor original de cada imagem publicada, responsabiliza-se integralmente por seu conteúdo e garante que as imagens atendem às regras da plataforma, incluindo a obrigação de ocultar placas visíveis e rostos identificáveis em vias públicas.</p>
 
               <h3>Privacidade e LGPD</h3>
-              <p>Seus dados pessoais são tratados conforme nossa Política de Privacidade e a Lei 13.709/2018 (LGPD). Você pode exercer seus direitos de acesso, correção, portabilidade e eliminação a qualquer tempo pelo e-mail privacidade@carshot.com.br.</p>
+              <p>Seus dados pessoais são tratados conforme nossa Política de Privacidade e a Lei 13.709/2018 (LGPD). Você pode exercer seus direitos de acesso, correção, portabilidade e eliminação a qualquer tempo pelo e-mail privacidade@spotgrid.com.br.</p>
 
               <h3>Limitação de responsabilidade</h3>
-              <p>A CarShot atua exclusivamente como intermediadora tecnológica. Não se responsabiliza pela autenticidade, qualidade ou autoria das fotografias, nem por disputas entre compradores e fotógrafos decorrentes de transações realizadas fora dos canais oficiais da plataforma.</p>
+              <p>A SpotGrid atua exclusivamente como intermediadora tecnológica. Não se responsabiliza pela autenticidade, qualidade ou autoria das fotografias, nem por disputas entre compradores e fotógrafos decorrentes de transações realizadas fora dos canais oficiais da plataforma.</p>
 
               <p style="margin-top:18px;font-size:12px;color:var(--faint)">
                 Ao aceitar, você concorda com a versão completa dos
                 <a href="#termos" onclick="route('termos')" target="_blank" style="color:var(--accent)">Termos de Uso</a>,
                 da <a href="#privacidade" onclick="route('privacidade')" target="_blank" style="color:var(--accent)">Política de Privacidade</a>
                 e da <a href="#autorizacao" onclick="route('autorizacao')" target="_blank" style="color:var(--accent)">Política de Autorização sobre Imagens</a>
-                da CarShot, versão ${TERMS_VERSION}.
+                da SpotGrid, versão ${TERMS_VERSION}.
               </p>
             </div>
             <div class="terms-wall-foot">
               <label class="terms-wall-check">
                 <input type="checkbox" id="termsWallCheck" onchange="document.getElementById('termsWallBtn').disabled=!this.checked">
-                <span>Li e concordo integralmente com os <strong>Termos de Uso</strong>, a <strong>Política de Privacidade</strong> e a <strong>Política de Autorização sobre Imagens</strong> da CarShot (versão ${TERMS_VERSION}).</span>
+                <span>Li e concordo integralmente com os <strong>Termos de Uso</strong>, a <strong>Política de Privacidade</strong> e a <strong>Política de Autorização sobre Imagens</strong> da SpotGrid (versão ${TERMS_VERSION}).</span>
               </label>
               <button class="btn" id="termsWallBtn" disabled onclick="_acceptTermsWall(${JSON.stringify(userId || null)})">Aceitar e continuar</button>
               <button class="terms-wall-refuse" onclick="_refuseTermsWall()">Não aceito — encerrar sessão</button>
@@ -7268,7 +7301,7 @@
               <p style="font-size:40px;margin:0 0 16px">⚠️</p>
               <h2 style="margin:0 0 12px;font-size:20px">Acesso encerrado</h2>
               <p style="color:var(--muted);font-size:14px;margin:0 0 24px;max-width:380px;margin-inline:auto">
-                Para utilizar a CarShot é necessário aceitar os Termos de Uso e a Política de Privacidade.<br>
+                Para utilizar a SpotGrid é necessário aceitar os Termos de Uso e a Política de Privacidade.<br>
                 Nenhum dado pessoal foi retido. Você pode aceitar os termos a qualquer momento ao criar uma conta.
               </p>
               <button class="btn btn-secondary" onclick="document.getElementById('termsWall').classList.remove('open');route('home')">Voltar à página inicial</button>
@@ -7348,7 +7381,7 @@
       async function requestDeleteAccount() {
         const confirmed = confirm("Tem certeza que deseja excluir sua conta?\n\nEsta ação é irreversível. Todos os seus dados serão eliminados em até 30 dias conforme a LGPD. Fotos publicadas podem ser mantidas por obrigação legal.");
         if (!confirmed) return;
-        const confirmed2 = confirm("Confirmação final: deseja realmente excluir sua conta CarShot?");
+        const confirmed2 = confirm("Confirmação final: deseja realmente excluir sua conta SpotGrid?");
         if (!confirmed2) return;
         try {
           await apiReq("/api/users/me", { method: "DELETE" });
@@ -7359,7 +7392,7 @@
           alert("Sua solicitação de exclusão foi registrada. Seus dados serão eliminados em até 30 dias.");
           route("home");
         } catch(e) {
-          alert("Não foi possível processar a solicitação. Entre em contato com privacidade@carshot.com.br");
+          alert("Não foi possível processar a solicitação. Entre em contato com privacidade@spotgrid.com.br");
         }
       }
 
@@ -7410,8 +7443,8 @@
           // Verificar se o usuário já aceitou a versão atual dos termos
           if (!hasAcceptedTerms(data.user.id)) {
             // Marcar para detectar se é atualização de termos (vs. primeiro acesso)
-            const prevKey = "carshot_terms_prev_user_" + data.user.id;
-            const hadPrev = Object.keys(localStorage).some(k => k.startsWith("carshot_terms_") && k.includes("_" + data.user.id));
+            const prevKey = "spotgrid_terms_prev_user_" + data.user.id;
+            const hadPrev = Object.keys(localStorage).some(k => k.startsWith("spotgrid_terms_") && k.includes("_" + data.user.id));
             if (hadPrev) localStorage.setItem(prevKey, "1");
             showTermsWall(data.user.id, () => { render(); });
           } else {
@@ -7437,7 +7470,7 @@
       }
       function authTitle() {
         if (authStep === "login") return accountType === "seller" ? "Acesse sua conta de fotógrafo." : "Acesse sua conta.";
-        if (authStep === "choice") return "Como você quer usar a CarShot?";
+        if (authStep === "choice") return "Como você quer usar a SpotGrid?";
         if (authStep === "photographer-info") return "Quase lá! Complete seu perfil.";
         return accountType === "seller" ? "Venda suas fotos." : "Compre fotos do seu carro.";
       }
@@ -7489,7 +7522,7 @@
             <label>Senha<input id="signupPass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></label>
             <label class="option-chip" style="align-items:flex-start;gap:10px;font-size:12.5px;color:var(--muted);cursor:pointer;padding:10px 0">
               <input type="checkbox" id="acceptTermsSignup" onchange="document.getElementById('signupBtn').disabled=!this.checked" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;accent-color:var(--accent)">
-              <span>Li e aceito integralmente os <a href="#termos" onclick="closeAuth()" style="color:var(--accent)">Termos de Uso</a>, a <a href="#privacidade" onclick="closeAuth()" style="color:var(--accent)">Política de Privacidade</a> e a <a href="#autorizacao" onclick="closeAuth()" style="color:var(--accent)">Política de Autorização sobre Imagens</a> da CarShot (versão ${TERMS_VERSION}). Declaro ter 18 anos ou mais.</span>
+              <span>Li e aceito integralmente os <a href="#termos" onclick="closeAuth()" style="color:var(--accent)">Termos de Uso</a>, a <a href="#privacidade" onclick="closeAuth()" style="color:var(--accent)">Política de Privacidade</a> e a <a href="#autorizacao" onclick="closeAuth()" style="color:var(--accent)">Política de Autorização sobre Imagens</a> da SpotGrid (versão ${TERMS_VERSION}). Declaro ter 18 anos ou mais.</span>
             </label>
             <p style="font-size:11px;color:var(--faint);margin:-4px 0 0;line-height:1.5">O aceite constitui manifestação livre, informada e inequívoca de vontade (LGPD art. 8º). O registro da data, hora e versão aceita é armazenado para fins de prova.</p>
             <button class="btn" id="signupBtn" disabled onclick="completeSignup()">Criar conta</button>
@@ -7502,7 +7535,7 @@
         const photo = photos.find((item) => item.id === id);
         photoModal.innerHTML = `
           <div class="photo-modal">
-            <div class="photo-wrap"><img src="${photo.image}" alt="${photo.title}"><div class="watermark">CarShot</div></div>
+            <div class="photo-wrap"><img src="${photo.image}" alt="${photo.title}"><div class="watermark">SpotGrid</div></div>
             <div class="pad">
               <div class="card-row">
                 <button onclick="closePhoto()" style="display:inline-flex;align-items:center;gap:6px;border:none;background:none;padding:0;cursor:pointer;font-size:13px;color:var(--muted);font-weight:500">
@@ -7766,11 +7799,11 @@
                   ["✅","Canal de suporte visível no rodapé","Feito nesta versão"],
                   ["✅","Banner de cookies","Feito nesta versão"],
                   ["⬜","CNPJ e razão social no rodapé","Adicionar quando empresa estiver constituída"],
-                  ["⬜","Registro da marca CarShot no INPI","Protocolar pedido — R$ ~355 por classe"],
+                  ["⬜","Registro da marca SpotGrid no INPI","Protocolar pedido — R$ ~355 por classe"],
                   ["⬜","Backend: endpoint de recuperação de senha (envio de e-mail)","Dev backend"],
                   ["⬜","Backend: endpoint de exclusão de conta (DELETE /api/users/me)","Dev backend"],
                   ["⬜","DPO (Encarregado de Dados) nomeado formalmente","Sócio responsável"],
-                  ["⬜","E-mail contato@carshot.com.br e privacidade@carshot.com.br ativos","Infraestrutura"],
+                  ["⬜","E-mail contato@spotgrid.com.br e privacidade@spotgrid.com.br ativos","Infraestrutura"],
                 ].map(([status, item, obs]) => `
                   <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:${status==='✅'?'rgba(0,160,60,.06)':'rgba(193,18,31,.05)'};border-radius:10px;border:1px solid ${status==='✅'?'rgba(0,160,60,.15)':'rgba(193,18,31,.12)'}">
                     <span style="font-size:16px;flex-shrink:0">${status}</span>
