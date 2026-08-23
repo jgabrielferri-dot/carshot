@@ -3638,9 +3638,11 @@
 
       function openBuyContact(photographerId, price, title, photoId) {
         if (!requireLogin()) return;
-        const priceText = price ? ` por *R$ ${price}*` : "";
-        const photoUrl = photoId
-          ? `\n\nLink da foto: https://jgabrielferri-dot.github.io/carshot/#post/${String(photoId).replace("api-photo-","")}`
+        const priceText = price && price !== "null" ? ` por *R$ ${price}*` : "";
+        let cleanId = String(photoId || "").replace("api-photo-", "");
+        if (cleanId && cleanId !== "null" && !/^api-/.test(cleanId)) cleanId = "api-" + cleanId;
+        const photoUrl = cleanId && cleanId !== "null" && cleanId !== "api-"
+          ? `\n\nLink da foto: https://jgabrielferri-dot.github.io/carshot/#post/${cleanId}`
           : "";
         const msg = `Olá! Tenho interesse em comprar a foto *${title || "sem título"}*${priceText} na CarShot.${photoUrl}`;
         window.open(`https://wa.me/${CARSHOT_WPP}?text=${encodeURIComponent(msg)}`, "_blank");
@@ -4310,9 +4312,7 @@
                       <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Local</label>
                       <select id="fLocal" class="field" style="width:100%">
                         <option value="">Qualquer local</option>
-                        <option value="Avenida Europa">Avenida Europa</option>
-                        <option value="Ponte Cidade Jardim">Ponte Cidade Jardim</option>
-                        <option value="Nürburgring">Nürburgring</option>
+                        ${PRESET_LOCATIONS.map(l => `<option value="${l}">${l}</option>`).join("")}
                       </select>
                     </div>
                     <div>
@@ -4340,13 +4340,11 @@
                       <input id="fPlate" class="field" style="width:100%" placeholder="Placa exata" ${isLoggedIn ? "" : "disabled"}>
                     </div>
                     <div style="grid-column:1/-1">
-                      <label style="font-size:13px;font-weight:500;display:block;margin-bottom:8px">Horário (seleção múltipla)</label>
-                      <div id="fTimeMulti" style="border:1px solid var(--line-strong);border-radius:12px;overflow-y:auto;max-height:160px;background:var(--surface)">
-                        ${["06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"].map((t,i,arr) =>
-                          `<div class="time-opt" data-time="${t}" onclick="toggleTimeOpt(this)" style="padding:9px 14px;font-size:13px;cursor:pointer;${i<arr.length-1?'border-bottom:1px solid var(--line);':''}">${t}</div>`
-                        ).join("")}
-                      </div>
-                      <p style="font-size:11px;color:var(--muted);margin-top:5px">Clique em um ou mais horários para selecionar</p>
+                      <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Horário (seleção múltipla)</label>
+                      <select id="fTimeMulti" class="field" multiple size="5" style="width:100%;height:auto">
+                        ${Array.from({length:24},(_,i)=>`${String(i).padStart(2,"0")}:00`).map(t=>`<option value="${t}">${t}</option>`).join("")}
+                      </select>
+                      <p style="font-size:11px;color:var(--muted);margin-top:5px">Segure Ctrl (ou ⌘ no Mac) para selecionar mais de um horário</p>
                     </div>
                   </div>
                   <div style="display:flex;align-items:center;gap:12px">
@@ -4438,15 +4436,9 @@
           : `<option value="">Qualquer modelo</option>`;
       }
 
-      function toggleTimeOpt(el) {
-        const sel = el.classList.toggle("time-opt-selected");
-        el.style.background = sel ? "var(--accent)" : "";
-        el.style.color = sel ? "#fff" : "";
-        el.style.fontWeight = sel ? "600" : "";
-      }
-
       function _getSelectedTimes() {
-        return Array.from(document.querySelectorAll("#fTimeMulti .time-opt-selected")).map(el => el.dataset.time);
+        const el = document.getElementById("fTimeMulti");
+        return el ? Array.from(el.selectedOptions).map(o => o.value) : [];
       }
 
       function _countFilterFields() {
@@ -4482,10 +4474,8 @@
           const el = document.getElementById(id);
           if (el) el.value = "";
         });
-        document.querySelectorAll("#fTimeMulti .time-opt-selected").forEach(el => {
-          el.classList.remove("time-opt-selected");
-          el.style.background = ""; el.style.color = ""; el.style.fontWeight = "";
-        });
+        const fTime = document.getElementById("fTimeMulti");
+        if (fTime) Array.from(fTime.options).forEach(o => o.selected = false);
         updateExploreBrandModels();
         const msg = document.getElementById("filterMsg");
         if (msg) msg.textContent = "";
@@ -5048,18 +5038,7 @@
                       <textarea id="pDesc" class="field" style="min-height:80px;padding:12px" placeholder="Descrição (opcional)"></textarea>
                       <select id="pLocal" class="field">
                         <option value="">Selecione o local *</option>
-                        <option value="Avenida Europa">Avenida Europa</option>
-                        <option value="Ponte Cidade Jardim">Ponte Cidade Jardim</option>
-                        <option value="Interlagos">Interlagos</option>
-                        <option value="Autódromo de Goiânia">Autódromo de Goiânia</option>
-                        <option value="Autódromo de Curitiba">Autódromo de Curitiba</option>
-                        <option value="Jardins">Jardins</option>
-                        <option value="Vila Madalena">Vila Madalena</option>
-                        <option value="Campos do Jordão">Campos do Jordão</option>
-                        <option value="Balneário Camboriú">Balneário Camboriú</option>
-                        <option value="Nova Lima">Nova Lima</option>
-                        <option value="Mooca">Mooca</option>
-                        <option value="Outro">Outro</option>
+                        ${PRESET_LOCATIONS.map(l => `<option value="${l}">${l}</option>`).join("")}
                       </select>
                       <select id="pMarca" class="field" onchange="updateUploadModels()">
                         <option value="">Marca do carro *</option>
@@ -5970,7 +5949,8 @@
         _loadLikedFeed("likedPreview", 3);
       }
 
-      const LOCATIONS_OPTIONS = ["Avenida Europa","Ponte Cidade Jardim","Nürburgring","Outro"];
+      const PRESET_LOCATIONS = ["Avenida Europa","Ponte Cidade Jardim","Interlagos","Autódromo de Goiânia","Autódromo de Curitiba","Jardins","Vila Madalena","Campos do Jordão","Balneário Camboriú","Nova Lima","Mooca","Nürburgring","Outro"];
+      const LOCATIONS_OPTIONS = PRESET_LOCATIONS;
       const BRANDS_OPTIONS = ["Acura","Alfa Romeo","Aston Martin","Audi","Bentley","BMW","BYD","Bugatti","Cadillac","Chevrolet","Chrysler","Citroën","Dodge","Ferrari","Fiat","Ford","Genesis","GMC","Honda","Hyundai","Infiniti","Jaguar","Jeep","Kia","Lamborghini","Land Rover","Lexus","Lincoln","Lotus","Maserati","McLaren","Mercedes-Benz","Mini","Mitsubishi","Nissan","Pagani","Peugeot","Porsche","Ram","Renault","Rolls-Royce","Subaru","Tesla","Toyota","Volkswagen","Volvo"];
 
       // ── Portfolio page (all photographer photos, organized) ────
@@ -6120,7 +6100,7 @@
 
             <div class="form" style="display:grid;gap:14px">
 
-              <label>Título <input id="ep_title" class="field" value="${p.title || ""}"></label>
+              <p style="font-size:12px;color:var(--muted);margin-bottom:4px">O título é gerado automaticamente: <em>Marca Modelo Local — Data</em></p>
               <label>Descrição <textarea id="ep_desc" class="field" style="min-height:72px;padding:12px">${p.description || ""}</textarea></label>
 
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -6179,14 +6159,20 @@
         btn.disabled = true; btn.textContent = "Salvando…";
         const fd = new FormData();
         const v = id => document.getElementById(id)?.value;
-        const checked = id => document.getElementById(id)?.checked;
-        fd.append("title",       v("ep_title")?.trim() || "");
+        const epBrand    = v("ep_brand") || "";
+        const epModel    = v("ep_model")?.trim() || "";
+        const epLocation = v("ep_location") || "";
+        const epDate     = v("ep_date")?.trim() || "";
+        const dateFmt    = epDate ? new Date(epDate + "T12:00:00").toLocaleDateString("pt-BR", { day:"2-digit", month:"short", year:"numeric" }) : "";
+        const titleParts = [epBrand, epModel, epLocation].filter(Boolean);
+        const autoTitle  = titleParts.length ? titleParts.join(" ") + (dateFmt ? " — " + dateFmt : "") : "Sem título";
+        fd.append("title",       autoTitle);
         fd.append("description", v("ep_desc") || "");
-        fd.append("brand",       v("ep_brand") || "");
-        fd.append("model_name",  v("ep_model")?.trim() || "");
+        fd.append("brand",       epBrand);
+        fd.append("model_name",  epModel);
         fd.append("color",       v("ep_color")?.trim() || "");
-        fd.append("location",    v("ep_location") || "");
-        fd.append("event_date",  v("ep_date")?.trim() || "");
+        fd.append("location",    epLocation);
+        fd.append("event_date",  epDate);
         fd.append("plate",       v("ep_plate")?.trim() || "");
         const epMode = document.querySelector("#ep_vis_group .vis-mode-btn.active")?.dataset.mode || "post";
         if ((epMode === "sale" || epMode === "both") && !currentUser.phone) {
