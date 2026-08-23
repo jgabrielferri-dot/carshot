@@ -1,9 +1,9 @@
 """
-Watermark utility for CarShot.
+Watermark utility for SpotGrid.
 
 Fotos "Só à venda" (is_for_sale=True, is_public=False) recebem:
   - Resolução reduzida para no máximo PREVIEW_MAX_PX no lado maior
-  - Grade densa de "CARSHOT" em diagonal, bem visível
+  - Grade densa de "SPOTGRID" em diagonal, bem visível
   - Overlay escurecido para dificultar uso sem compra
   - Qualidade JPEG baixa (PREVIEW_QUALITY)
 """
@@ -14,9 +14,9 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 # ── Configurações do preview protegido ────────────────────────
 PREVIEW_MAX_PX   = 900    # lado maior do preview (px)
 PREVIEW_QUALITY  = 42     # qualidade JPEG (0-95)
-WM_OPACITY       = 130    # opacidade da marca d'água (0-255) — 130 ≈ 51%
-DARKEN_OPACITY   = 80     # overlay escuro sobre a imagem (0-255)
-WM_TEXT          = "CARSHOT"
+WM_OPACITY       = 160    # opacidade da marca d'água (0-255) — 160 ≈ 63%
+DARKEN_OPACITY   = 90     # overlay escuro sobre a imagem (0-255)
+WM_TEXT          = "SPOTGRID"
 # ──────────────────────────────────────────────────────────────
 
 _FONT_PATHS = [
@@ -72,7 +72,7 @@ def add_watermark(input_path: str, output_path: str) -> None:
     img = Image.alpha_composite(img, dark)
 
     # ── 3. Grade densa de marcas d'água ───────────────────────
-    font_size = max(20, w // 12)          # texto razoavelmente grande
+    font_size = max(18, w // 14)          # texto compacto para caber mais repetições
     font = _get_font(font_size)
 
     # Camada de watermark em alta resolução para depois rotacionar
@@ -83,8 +83,8 @@ def add_watermark(input_path: str, output_path: str) -> None:
     tw = bbox[2] - bbox[0]
     th = bbox[3] - bbox[1]
 
-    step_x = tw + 60
-    step_y = th + 50
+    step_x = tw + 24   # espaçamento reduzido — grade mais densa
+    step_y = th + 20
 
     # Duas passagens: texto principal + versão menor entre as linhas
     for pass_idx, (txt, fsize, alpha) in enumerate([
