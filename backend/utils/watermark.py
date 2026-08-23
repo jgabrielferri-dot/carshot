@@ -14,8 +14,8 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 # ── Configurações do preview protegido ────────────────────────
 PREVIEW_MAX_PX   = 900    # lado maior do preview (px)
 PREVIEW_QUALITY  = 42     # qualidade JPEG (0-95)
-WM_OPACITY       = 85     # opacidade da marca d'água (0-255) — 85 ≈ 33%
-DARKEN_OPACITY   = 30     # overlay escuro sobre a imagem (0-255)
+WM_OPACITY       = 120    # opacidade da marca d'água (0-255) — 120 ≈ 47%
+DARKEN_OPACITY   = 50     # overlay escuro sobre a imagem (0-255)
 WM_TEXT          = "SPOTGRID"
 # ──────────────────────────────────────────────────────────────
 
