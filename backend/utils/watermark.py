@@ -42,30 +42,22 @@ def _get_font(size: int) -> ImageFont.FreeTypeFont:
     return ImageFont.load_default()
 
 
-def add_watermark(input_path: str, output_path: str) -> None:
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    with Image.open(input_path) as src:
-        img = src.convert("RGBA")
-
-    # ── 1. Reduzir resolução ──────────────────────────────────
+def add_watermark_pil(img: Image.Image) -> Image.Image:
+    """Recebe PIL Image, retorna PIL Image com watermark (sem salvar em disco)."""
+    img = img.convert("RGBA")
     w, h = img.size
     scale = min(PREVIEW_MAX_PX / max(w, h), 1.0)
     if scale < 1.0:
         img = img.resize((max(1, int(w * scale)), max(1, int(h * scale))), Image.LANCZOS)
     w, h = img.size
 
-    # ── 2. Camada de watermark (badges horizontais em grade) ──
     font_size = max(14, w // 22)
     font = _get_font(font_size)
-
     wm_layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     draw = ImageDraw.Draw(wm_layer)
-
     bbox = draw.textbbox((0, 0), WM_TEXT, font=font)
     tw = bbox[2] - bbox[0]
     th = bbox[3] - bbox[1]
-
     badge_w = tw + PADDING_X * 2
     badge_h = th + PADDING_Y * 2
     step_x  = badge_w + STEP_X_EXTRA
@@ -74,28 +66,21 @@ def add_watermark(input_path: str, output_path: str) -> None:
     row = 0
     y = -badge_h
     while y < h + badge_h:
-        # Linhas alternadas deslocadas pela metade para parecer mais profissional
         offset_x = (step_x // 2) if (row % 2 == 1) else 0
         x = -badge_w + offset_x
         while x < w + badge_w:
-            # Fundo do badge
-            draw.rounded_rectangle(
-                [x, y, x + badge_w, y + badge_h],
-                radius=4,
-                fill=BADGE_BG,
-            )
-            # Texto
-            draw.text(
-                (x + PADDING_X - bbox[0], y + PADDING_Y - bbox[1]),
-                WM_TEXT,
-                font=font,
-                fill=TEXT_COLOR,
-            )
+            draw.rounded_rectangle([x, y, x + badge_w, y + badge_h], radius=4, fill=BADGE_BG)
+            draw.text((x + PADDING_X - bbox[0], y + PADDING_Y - bbox[1]), WM_TEXT, font=font, fill=TEXT_COLOR)
             x += step_x
         y += step_y
         row += 1
 
-    watermarked = Image.alpha_composite(img, wm_layer).convert("RGB")
+    return Image.alpha_composite(img, wm_layer).convert("RGB")
 
-    # ── 3. Salvar ─────────────────────────────────────────────
-    watermarked.save(output_path, "JPEG", quality=PREVIEW_QUALITY, optimize=True)
+
+def add_watermark(input_path: str, output_path: str) -> None:
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with Image.open(input_path) as src:
+        img = src.copy()
+    result = add_watermark_pil(img)
+    result.save(output_path, "JPEG", quality=PREVIEW_QUALITY, optimize=True)
