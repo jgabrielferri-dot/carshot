@@ -7547,16 +7547,10 @@
           };
           await Promise.all([loadFollowing(), loadInteractions()]);
           updateHeader(); closeAuth();
-          // Verificar se o usuário já aceitou a versão atual dos termos
-          if (!hasAcceptedTerms(data.user.id)) {
-            // Marcar para detectar se é atualização de termos (vs. primeiro acesso)
-            const prevKey = "spotgrid_terms_prev_user_" + data.user.id;
-            const hadPrev = Object.keys(localStorage).some(k => k.startsWith("spotgrid_terms_") && k.includes("_" + data.user.id));
-            if (hadPrev) localStorage.setItem(prevKey, "1");
-            showTermsWall(data.user.id, () => { render(); });
-          } else {
-            render(); // stay on current page
-          }
+          // Os termos são aceitos no cadastro (checkbox obrigatório).
+          // Não reexibir o muro legal em logins posteriores.
+          recordTermsAcceptance(data.user.id);
+          render();
         } catch (e) {
           alert(e.message);
           if (btn) { btn.disabled = false; btn.textContent = "Entrar"; }
