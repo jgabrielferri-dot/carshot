@@ -5071,10 +5071,12 @@
                 ${tab === "posts"
                   ? (displayPosts.length
                       ? `<div class="gallery-grid">${displayPosts.map(galleryCard).join("")}</div>`
-                      : `<p class="empty">Nenhum post ainda. <button class="btn btn-secondary" style="margin-left:10px" onclick="route('novo-post')">Publicar agora</button></p>`)
+                      : (isOwner
+                          ? `<p class="empty">Nenhum post ainda. <button class="btn btn-secondary" style="margin-left:10px" onclick="route('novo-post')">Publicar agora</button></p>`
+                          : `<p class="empty">Este fotógrafo ainda não publicou posts.</p>`))
                   : (displayCards.length
                       ? `<div class="gallery-grid">${displayCards.map(galleryCard).join("")}</div>`
-                      : `<p class="empty">Nenhuma foto no portfólio ainda.</p>`)}
+                      : `<p class="empty">${isOwner ? "Nenhuma foto no portfólio ainda." : "Este fotógrafo ainda não tem fotos no portfólio."}</p>`)}
               </section>
             `;
           }).catch(() => {
