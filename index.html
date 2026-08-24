@@ -3567,8 +3567,11 @@
         route("home");
       }
       function accountMenuItems() {
+        const adminItem = currentUser.is_admin
+          ? `<button onclick="menuRoute('admin')" style="color:var(--accent);font-weight:600">⚙ Pedidos (admin)</button>`
+          : "";
         if (currentUser.home === "vendedor") {
-          return `
+          return adminItem + `
             <button onclick="menuRoute('vendedor')">Painel do fotógrafo</button>
             <button onclick="menuRoute('vendedor','vendas')">Vendas</button>
             <button onclick="menuRoute('vendedor','albuns')">Álbuns</button>
@@ -3578,7 +3581,7 @@
             <button class="danger" onclick="logout()">Sair</button>
           `;
         }
-        return `
+        return adminItem + `
           <button onclick="menuRoute('comprador')">Área do comprador</button>
           <button onclick="menuRoute('comprador','minhas-fotos')">Minhas fotos</button>
           <button onclick="menuRoute('comprador','favoritos')">Favoritos</button>
@@ -3663,7 +3666,7 @@
       // ── Buy contact modal ─────────────────────────────────────
       const SPOTGRID_WPP = "5519982912656";
 
-      function openBuyContact(photographerId, price, title, photoId) {
+      async function openBuyContact(photographerId, price, title, photoId) {
         if (!requireLogin()) return;
         const priceText = price && price !== "null" ? ` por *R$ ${price}*` : "";
         let cleanId = String(photoId || "").replace("api-photo-", "");
@@ -3671,7 +3674,23 @@
         const photoUrl = cleanId && cleanId !== "null" && cleanId !== "api-"
           ? `\n\nLink da foto: https://jgabrielferri-dot.github.io/carshot/#post/${cleanId}`
           : "";
-        const msg = `Olá! Tenho interesse em comprar a foto *${title || "sem título"}*${priceText} na SpotGrid.${photoUrl}`;
+
+        // Registra o pedido antes de abrir o WhatsApp, para ficar rastreável no painel.
+        let orderText = "";
+        const numericId = parseInt(String(cleanId).replace("api-", ""), 10);
+        if (numericId) {
+          try {
+            const fd = new FormData();
+            fd.append("photo_id", numericId);
+            const order = await apiReq("/api/orders", { method: "POST", body: fd });
+            orderText = `\n\nNº do pedido: *#${order.id}*`;
+          } catch (e) {
+            // Não bloquear a compra se o registro falhar — o contato ainda vale.
+            console.warn("Não foi possível registrar o pedido:", e.message);
+          }
+        }
+
+        const msg = `Olá! Tenho interesse em comprar a foto *${title || "sem título"}*${priceText} na SpotGrid.${orderText}${photoUrl}`;
         window.open(`https://wa.me/${SPOTGRID_WPP}?text=${encodeURIComponent(msg)}`, "_blank");
       }
 
@@ -5926,6 +5945,68 @@
         }).join("")}</aside>`;
       }
 
+      async function _loadMyOrders() {
+        const el = document.getElementById("myOrdersList");
+        if (!el) return;
+        try {
+          const orders = await apiReq("/api/orders/me");
+          if (!orders.length) {
+            el.innerHTML = `<p class="copy">Você ainda não fez nenhum pedido.<br>
+              <button class="btn" style="margin-top:14px" onclick="route('explorar')">Explorar fotos</button></p>`;
+            return;
+          }
+          el.innerHTML = orders.map(o => `
+            <div class="surface pad" style="display:flex;gap:16px;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap">
+              <img src="${API_BASE}${o.preview_url}" alt=""
+                   style="width:110px;height:82px;object-fit:cover;border-radius:12px;flex-shrink:0">
+              <div style="flex:1;min-width:220px">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <strong style="font-size:15px">Pedido #${o.id}</strong>
+                  ${_statusChip(o.status)}
+                </div>
+                <p class="meta" style="margin-top:6px">${o.photo_title || "sem título"}</p>
+                <p class="meta">${[o.photo_brand, o.photo_model, o.photo_location].filter(Boolean).join(" · ")}</p>
+                <p class="meta">${_brl(o.price)}${o.photo_resolution ? " · " + o.photo_resolution : ""}</p>
+                <div style="margin-top:12px">
+                  ${o.status === "paid"
+                    ? `<button class="btn" style="min-height:38px;padding:0 18px;font-size:13px" onclick="downloadPurchase(${o.id}, this)">Baixar em alta resolução</button>`
+                    : o.status === "cancelled"
+                      ? `<p class="meta" style="color:var(--faint)">Pedido cancelado.</p>`
+                      : `<p class="meta">Assim que o pagamento for confirmado, o download aparece aqui.</p>`}
+                </div>
+              </div>
+            </div>
+          `).join("");
+        } catch (e) {
+          el.innerHTML = `<p class="copy">Erro ao carregar pedidos: ${e.message || ""}</p>`;
+        }
+      }
+
+      async function downloadPurchase(orderId, btn) {
+        const label = btn ? btn.textContent : "";
+        if (btn) { btn.disabled = true; btn.textContent = "Baixando..."; }
+        try {
+          const tok = getToken();
+          const res = await fetch(`${API_BASE}/api/orders/${orderId}/download`, {
+            headers: tok ? { Authorization: `Bearer ${tok}` } : {}
+          });
+          if (!res.ok) throw new Error("Download ainda não liberado para este pedido.");
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `spotgrid-pedido-${orderId}.jpg`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 2000);
+        } catch (e) {
+          alert(e.message || "Erro ao baixar o arquivo.");
+        } finally {
+          if (btn) { btn.disabled = false; btn.textContent = label || "Baixar em alta resolução"; }
+        }
+      }
+
       function buyerDashboard(page = "dashboard") {
         const purchased = buyerPurchases.map((item) => ({ ...item, photo: photos.find((photo) => photo.id === item.photoId) })).filter((item) => item.photo);
         const myPlate = "";
@@ -5937,11 +6018,12 @@
               ${buyerNav("minhas-fotos")}
               <div class="dash-content">
                 <div class="dash-section">
-                  <div class="dash-section-head"><div><p class="eyebrow">Biblioteca</p><h2>Compradas</h2></div><button class="btn btn-secondary" onclick="route('explorar')">Buscar mais</button></div>
-                  <div class="library-grid">${purchased.map((item) => libraryItem(item.photo, "Baixar")).join("")}</div>
+                  <div class="dash-section-head"><div><p class="eyebrow">Biblioteca</p><h2>Meus pedidos</h2></div><button class="btn btn-secondary" onclick="route('explorar')">Buscar mais</button></div>
+                  <div id="myOrdersList"><p class="copy">Carregando...</p></div>
                 </div>
               </div>
             </section>`;
+          _loadMyOrders();
           return;
         }
 
@@ -7306,6 +7388,141 @@
         `;
       }
 
+      // ── Painel administrativo de pedidos ─────────────────────────────────────
+      let _adminFilter = "";
+
+      function adminOrdersPage() {
+        if (!isLoggedIn || !currentUser.is_admin) {
+          view.innerHTML = `
+            <section class="page container" style="padding:120px 0;text-align:center">
+              <p class="lead">Área restrita ao administrador.</p>
+              <button class="btn btn-secondary" style="margin-top:16px" onclick="route('home')">Voltar ao início</button>
+            </section>`;
+          return;
+        }
+        view.innerHTML = `
+          <section class="container dash-hero">
+            <p class="eyebrow">Administração</p>
+            <h1>Pedidos.</h1>
+            <p class="lead" style="margin-top:14px">Confirme os pagamentos e libere o download para o comprador.</p>
+          </section>
+          <section class="container" style="padding-bottom:80px">
+            <div id="adminTotals" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px"></div>
+            <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
+              <button class="mini-btn" onclick="setAdminFilter('')">Todos</button>
+              <button class="mini-btn" onclick="setAdminFilter('pending')">Aguardando pagamento</button>
+              <button class="mini-btn" onclick="setAdminFilter('paid')">Pagos</button>
+              <button class="mini-btn" onclick="setAdminFilter('cancelled')">Cancelados</button>
+            </div>
+            <div id="adminOrderList"><p class="copy">Carregando pedidos...</p></div>
+          </section>
+        `;
+        loadAdminOrders();
+      }
+
+      function setAdminFilter(status) {
+        _adminFilter = status;
+        loadAdminOrders();
+      }
+
+      function _brl(v) {
+        return "R$ " + Number(v || 0).toFixed(2).replace(".", ",");
+      }
+
+      function _statusChip(status) {
+        const map = {
+          pending:   ["Aguardando pagamento", "#b8860b", "rgba(184,134,11,.12)"],
+          paid:      ["Pago · liberado",      "#1a7f37", "rgba(26,127,55,.12)"],
+          cancelled: ["Cancelado",            "#8a8a8a", "rgba(138,138,138,.14)"],
+        };
+        const [txt, color, bg] = map[status] || map.pending;
+        return `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;color:${color};background:${bg}">${txt}</span>`;
+      }
+
+      async function loadAdminOrders() {
+        const list = document.getElementById("adminOrderList");
+        if (!list) return;
+        list.innerHTML = `<p class="copy">Carregando pedidos...</p>`;
+        try {
+          const q = _adminFilter ? `?status=${_adminFilter}` : "";
+          const data = await apiReq(`/api/orders/admin${q}`);
+
+          const t = data.totals || {};
+          const totals = document.getElementById("adminTotals");
+          if (totals) {
+            const card = (label, value, accent) => `
+              <div class="surface pad" style="padding:16px 18px">
+                <p class="eyebrow" style="margin-bottom:6px">${label}</p>
+                <strong style="font-size:22px;font-weight:600${accent ? ";color:var(--accent)" : ""}">${value}</strong>
+              </div>`;
+            totals.innerHTML =
+              card("Aguardando", t.pending ?? 0) +
+              card("Pagos", t.paid ?? 0) +
+              card("Sua comissão", _brl(t.revenue), true) +
+              card("A repassar", _brl(t.payouts));
+          }
+
+          if (!data.orders.length) {
+            list.innerHTML = `<p class="copy">Nenhum pedido${_adminFilter ? " com este status" : ""}.</p>`;
+            return;
+          }
+
+          list.innerHTML = data.orders.map(o => `
+            <div class="surface pad" style="display:flex;gap:16px;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap">
+              <img src="${API_BASE}${o.preview_url}" alt=""
+                   style="width:110px;height:82px;object-fit:cover;border-radius:12px;flex-shrink:0">
+              <div style="flex:1;min-width:240px">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <strong style="font-size:15px">Pedido #${o.id}</strong>
+                  ${_statusChip(o.status)}
+                </div>
+                <p class="meta" style="margin-top:6px">
+                  Foto #${o.photo_id} · ${o.photo_title || "sem título"}${o.photo_plate ? " · placa " + o.photo_plate : ""}
+                </p>
+                <p class="meta">Comprador: <strong>${o.buyer_name || "—"}</strong> · ${o.buyer_email || "—"}${o.buyer_phone ? " · " + o.buyer_phone : ""}</p>
+                <p class="meta">Fotógrafo: ${o.photographer_name || "—"}${o.photographer_phone ? " · " + o.photographer_phone : ""}</p>
+                <p class="meta" style="margin-top:6px">
+                  Valor ${_brl(o.price)} · comissão ${_brl(o.commission)} · repasse ${_brl(o.payout)}
+                </p>
+                ${o.note ? `<p class="meta" style="margin-top:4px;font-style:italic">Obs.: ${o.note}</p>` : ""}
+                ${o.downloaded_at ? `<p class="meta" style="color:var(--faint)">Baixado em ${new Date(o.downloaded_at).toLocaleString("pt-BR")}</p>` : ""}
+                <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+                  ${o.status !== "paid"
+                    ? `<button class="mini-btn" onclick="setOrderStatus(${o.id},'paid')">Confirmar pagamento</button>`
+                    : `<button class="mini-btn" onclick="setOrderStatus(${o.id},'pending')">Reverter para pendente</button>`}
+                  <button class="mini-btn" onclick="downloadOriginal(${o.photo_id}, this)">Baixar original</button>
+                  ${o.buyer_phone ? `<a class="mini-btn" style="display:inline-flex;align-items:center" target="_blank"
+                       href="https://wa.me/${String(o.buyer_phone).replace(/\D/g,"")}">Chamar comprador</a>` : ""}
+                  ${o.status !== "cancelled"
+                    ? `<button class="mini-btn" style="color:var(--accent)" onclick="setOrderStatus(${o.id},'cancelled')">Cancelar</button>`
+                    : ""}
+                </div>
+              </div>
+            </div>
+          `).join("");
+        } catch (e) {
+          list.innerHTML = `<p class="copy">Erro ao carregar pedidos: ${e.message || ""}</p>`;
+        }
+      }
+
+      async function setOrderStatus(orderId, status) {
+        const rotulo = { paid: "confirmar o pagamento", cancelled: "cancelar", pending: "reverter para pendente" }[status];
+        if (!confirm(`Deseja ${rotulo} do pedido #${orderId}?`)) return;
+        let note = null;
+        if (status === "paid") {
+          note = prompt("Anotação interna (opcional) — ex.: forma de pagamento:", "") || "";
+        }
+        try {
+          const fd = new FormData();
+          fd.append("status", status);
+          if (note !== null) fd.append("note", note);
+          await apiReq(`/api/orders/${orderId}/status`, { method: "PUT", body: fd });
+          loadAdminOrders();
+        } catch (e) {
+          alert("Erro ao atualizar pedido: " + (e.message || ""));
+        }
+      }
+
       // ── Controle de aceite de termos ─────────────────────────────────────────
       function _termsKey(userId) {
         return "spotgrid_terms_" + TERMS_VERSION + "_" + (userId || "anon");
@@ -7543,7 +7760,8 @@
             home: data.user.account_type === "photographer" ? "vendedor" : "comprador",
             id: data.user.id, account_type: data.user.account_type,
             bio: data.user.bio || "",
-            phone: data.user.phone || ""
+            phone: data.user.phone || "",
+            is_admin: !!data.user.is_admin
           };
           await Promise.all([loadFollowing(), loadInteractions()]);
           updateHeader(); closeAuth();
@@ -7708,6 +7926,7 @@
         else if (name === "busca") searchPage(payload);
         else if (name === "sucesso") success();
         else if (name === "conformidade") complianceChecklist();
+        else if (name === "admin") adminOrdersPage();
         else home();
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -7991,7 +8210,8 @@
                 account_type: user.account_type,
                 bio: user.bio || "",
                 phone: user.phone || "",
-                contactEmail: user.contact_email || ""
+                contactEmail: user.contact_email || "",
+                is_admin: !!user.is_admin
               };
             } catch { clearToken(); }
           }
