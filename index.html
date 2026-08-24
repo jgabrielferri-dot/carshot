@@ -7771,6 +7771,31 @@
         } catch { alert("Erro ao excluir."); }
       }
 
+      async function downloadOriginal(photoId, btn) {
+        const label = btn ? btn.textContent : "";
+        if (btn) { btn.disabled = true; btn.textContent = "Baixando..."; }
+        try {
+          const tok = getToken();
+          const res = await fetch(`${API_BASE}/api/photos/${photoId}/original`, {
+            headers: tok ? { Authorization: `Bearer ${tok}` } : {}
+          });
+          if (!res.ok) throw new Error("Sem permissão para baixar esta foto.");
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `spotgrid-${photoId}.jpg`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 2000);
+        } catch (e) {
+          alert(e.message || "Erro ao baixar o arquivo original.");
+        } finally {
+          if (btn) { btn.disabled = false; btn.textContent = label || "Baixar original"; }
+        }
+      }
+
       function loadMyPhotosInto(containerId) {
         if (!isLoggedIn || !currentUser.id) return;
         apiReq("/api/photos?photographer_id=" + currentUser.id).then(data => {
@@ -7785,10 +7810,13 @@
               <img src="${API_BASE}/api/photos/${p.id}/preview" alt="${p.title}">
               <div>
                 <h3 style="font-size:15px">${p.title}</h3>
+                <p class="meta">
+                  <strong style="color:var(--accent)">#${p.id}</strong>${p.plate ? " · Placa " + p.plate : ""}
+                </p>
                 <p class="meta">${p.is_public ? "Público" : "Privado"} · ${p.is_for_sale ? "À venda" : "Não vendável"}${p.price ? " · R$ " + p.price : ""}</p>
                 <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
                   <button class="mini-btn" onclick="togglePhotoPublic(${p.id},${p.is_public})">${p.is_public ? "Tornar privado" : "Tornar público"}</button>
-                  <a href="${API_BASE}/api/photos/${p.id}/original" class="mini-btn" style="display:inline-flex;align-items:center" download>Baixar original</a>
+                  <button class="mini-btn" onclick="downloadOriginal(${p.id}, this)">Baixar original</button>
                   <button class="mini-btn" style="color:var(--accent)" onclick="deleteMyPhoto(${p.id})">Excluir</button>
                 </div>
               </div>
