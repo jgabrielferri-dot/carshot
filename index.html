@@ -830,6 +830,28 @@
         font-size: 13px;
       }
 
+      /* ── Multi-select com checkbox ── */
+      .cms-wrap { position: relative; }
+      .cms-trigger {
+        display: flex; align-items: center; justify-content: space-between;
+        cursor: pointer; user-select: none; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis;
+      }
+      .cms-trigger::after { content: "▾"; font-size: 11px; color: var(--muted); margin-left: 6px; flex-shrink: 0; }
+      .cms-dropdown {
+        display: none; position: absolute; z-index: 200; top: calc(100% + 4px); left: 0; right: 0;
+        background: var(--surface); border: 1px solid var(--line-strong);
+        border-radius: 14px; max-height: 220px; overflow-y: auto;
+        box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      }
+      .cms-dropdown.open { display: block; }
+      .cms-option {
+        display: flex; align-items: center; gap: 10px;
+        padding: 9px 14px; cursor: pointer; font-size: 13px;
+      }
+      .cms-option:hover { background: var(--panel-soft); }
+      .cms-option input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
+
       .photo-wrap { position: relative; overflow: hidden; }
       .photo-wrap img { height: 320px; object-fit: cover; filter: saturate(.88) contrast(.96); }
 
@@ -4351,10 +4373,14 @@
                     </div>
                     <div style="grid-column:1/-1">
                       <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Horário (seleção múltipla)</label>
-                      <select id="fTimeMulti" class="field" multiple size="5" style="width:100%;height:auto">
-                        ${Array.from({length:24},(_,i)=>`${String(i).padStart(2,"0")}:00`).map(t=>`<option value="${t}">${t}</option>`).join("")}
-                      </select>
-                      <p style="font-size:11px;color:var(--muted);margin-top:5px">Segure Ctrl (ou ⌘ no Mac) para selecionar mais de um horário</p>
+                      <div class="cms-wrap" id="fTimeMultiWrap">
+                        <div class="cms-trigger field" id="fTimeTrigger" onclick="toggleTimeDropdown()">Qualquer horário</div>
+                        <div class="cms-dropdown" id="fTimeDropdown">
+                          ${Array.from({length:24},(_,i)=>`${String(i).padStart(2,"0")}:00`).map(t =>
+                            `<label class="cms-option"><input type="checkbox" value="${t}" onchange="updateTimeTrigger()"> ${t}</label>`
+                          ).join("")}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div style="display:flex;align-items:center;gap:12px">
@@ -4446,9 +4472,18 @@
           : `<option value="">Qualquer modelo</option>`;
       }
 
+      function toggleTimeDropdown() {
+        document.getElementById("fTimeDropdown")?.classList.toggle("open");
+      }
+
+      function updateTimeTrigger() {
+        const selected = _getSelectedTimes();
+        const trigger = document.getElementById("fTimeTrigger");
+        if (trigger) trigger.childNodes[0].textContent = selected.length ? selected.join(", ") : "Qualquer horário";
+      }
+
       function _getSelectedTimes() {
-        const el = document.getElementById("fTimeMulti");
-        return el ? Array.from(el.selectedOptions).map(o => o.value) : [];
+        return Array.from(document.querySelectorAll('#fTimeMultiWrap input[type="checkbox"]:checked')).map(cb => cb.value);
       }
 
       function _countFilterFields() {
@@ -4486,8 +4521,9 @@
           const el = document.getElementById(id);
           if (el) el.value = "";
         });
-        const fTime = document.getElementById("fTimeMulti");
-        if (fTime) Array.from(fTime.options).forEach(o => o.selected = false);
+        document.querySelectorAll('#fTimeMultiWrap input[type="checkbox"]').forEach(cb => cb.checked = false);
+        updateTimeTrigger();
+        document.getElementById("fTimeDropdown")?.classList.remove("open");
         updateExploreBrandModels();
         const msg = document.getElementById("filterMsg");
         if (msg) msg.textContent = "";
@@ -7729,6 +7765,7 @@
 
       document.addEventListener("click", (event) => {
         if (!event.target.closest(".account-wrap")) closeAccountMenu();
+        if (!event.target.closest(".cms-wrap")) document.getElementById("fTimeDropdown")?.classList.remove("open");
         const auth = event.target.closest("[data-auth]");
         if (auth) openAuth(auth.dataset.auth);
 
