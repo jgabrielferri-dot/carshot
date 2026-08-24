@@ -3130,6 +3130,7 @@
           <a href="#albuns" data-route="albuns">Álbuns</a>
         </nav>
         <div class="header-actions">
+          <button id="quickPublishBtn" onclick="route('novo-post')" aria-label="Publicar foto" style="display:none;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:22px;font-weight:300;cursor:pointer;line-height:1;flex-shrink:0">+</button>
           <button class="cart-button" data-route="carrinho" aria-label="Abrir carrinho">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M6.2 6.5h15l-1.7 8.2a2 2 0 0 1-2 1.6H9.1a2 2 0 0 1-2-1.7L5.7 4.9H3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -3497,6 +3498,8 @@
       function updateHeader() {
         cartCount.textContent = String(cart.length);
         cartCount.style.display = cart.length ? "grid" : "none";
+        const qpBtn = document.getElementById("quickPublishBtn");
+        if (qpBtn) qpBtn.style.display = (isLoggedIn && currentUser.account_type === "photographer") ? "flex" : "none";
         if (isLoggedIn) {
           accountButton.className = "account-chip";
           accountButton.removeAttribute("data-auth");
