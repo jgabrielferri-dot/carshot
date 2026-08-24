@@ -4380,8 +4380,14 @@
                           <span class="cms-label" id="fTimeLabel">Qualquer horário</span>
                         </div>
                         <div class="cms-dropdown" id="fTimeDropdown">
-                          ${Array.from({length:48},(_,i)=>{const h=Math.floor(i/2),m=i%2===0?"00":"30";return `${String(h).padStart(2,"0")}:${m}`;}).map(t =>
-                            `<label class="cms-option"><input type="checkbox" value="${t}" onchange="updateTimeTrigger()"><span>${t}</span></label>`
+                          ${Array.from({length:48},(_,i)=>{
+                            const h=Math.floor(i/2),m=i%2===0?"00":"30";
+                            const start=`${String(h).padStart(2,"0")}:${m}`;
+                            const ni=(i+1)%48,nh=Math.floor(ni/2),nm=ni%2===0?"00":"30";
+                            const end=`${String(nh).padStart(2,"0")}:${nm}`;
+                            return {start,label:`${start} às ${end}`};
+                          }).map(({start,label}) =>
+                            `<label class="cms-option"><input type="checkbox" value="${start}" onchange="updateTimeTrigger()"><span>${label}</span></label>`
                           ).join("")}
                         </div>
                       </div>
