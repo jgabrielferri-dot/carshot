@@ -1741,7 +1741,7 @@
         display: grid;
         grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr);
         gap: 24px;
-        align-items: center;
+        align-items: start;
       }
       .detail-image {
         overflow: hidden;
@@ -4870,8 +4870,9 @@
                   Voltar
                 </button>
                 <div class="post-detail-layout">
-                <div class="detail-image" style="position:relative">
-                  <img src="${API_BASE}/api/photos/${p.id}/preview" alt="${p.title}" style="width:100%;border-radius:20px;object-fit:cover">
+                <div class="detail-image" style="position:relative;background:#111;display:flex;align-items:center;justify-content:center">
+                  <img src="${API_BASE}/api/photos/${p.id}/preview" alt="${p.title}"
+                       style="width:100%;height:auto;max-height:85vh;object-fit:contain;display:block;border-radius:20px">
                   ${p.is_for_sale && !p.is_public ? `<div class="watermark" style="font-size:32px;color:rgba(255,255,255,.22);border-radius:20px">SpotGrid</div>` : ""}
                 </div>
                 <aside class="surface pad sidebar">
