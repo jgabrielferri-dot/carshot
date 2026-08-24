@@ -4339,6 +4339,13 @@
                       </select>
                     </div>
                     <div>
+                      <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Evento</label>
+                      <select id="fEvent" class="field" style="width:100%">
+                        <option value="">Qualquer evento</option>
+                        ${PRESET_EVENTS.map(e => `<option value="${e}">${e}</option>`).join("")}
+                      </select>
+                    </div>
+                    <div>
                       <label style="font-size:13px;font-weight:500;display:block;margin-bottom:6px">Placa${isLoggedIn ? "" : " (login necessário)"}</label>
                       <input id="fPlate" class="field" style="width:100%" placeholder="Placa exata" ${isLoggedIn ? "" : "disabled"}>
                     </div>
@@ -4445,13 +4452,14 @@
       }
 
       function _countFilterFields() {
-        const local = document.getElementById("fLocal")?.value;
-        const brand = document.getElementById("fBrand")?.value;
-        const model = document.getElementById("fModel")?.value;
-        const color = document.getElementById("fColor")?.value;
-        const plate = document.getElementById("fPlate")?.value?.trim();
-        const times = _getSelectedTimes();
-        return [local, brand, model, color, plate, times.length ? "t" : ""].filter(Boolean).length;
+        const local  = document.getElementById("fLocal")?.value;
+        const brand  = document.getElementById("fBrand")?.value;
+        const model  = document.getElementById("fModel")?.value;
+        const color  = document.getElementById("fColor")?.value;
+        const evento = document.getElementById("fEvent")?.value;
+        const plate  = document.getElementById("fPlate")?.value?.trim();
+        const times  = _getSelectedTimes();
+        return [local, brand, model, color, evento, plate, times.length ? "t" : ""].filter(Boolean).length;
       }
 
       async function applyExploreFilter() {
@@ -4466,14 +4474,15 @@
         const brand  = document.getElementById("fBrand")?.value;
         const model  = document.getElementById("fModel")?.value;
         const color  = document.getElementById("fColor")?.value;
+        const evento = document.getElementById("fEvent")?.value;
         const plate  = document.getElementById("fPlate")?.value?.trim();
         const times  = _getSelectedTimes();
         const firstTime = times[0] || "";
-        _loadExplorePhotos({ location: local, brand, model, color, plate, event_time: firstTime, _extraTimes: times });
+        _loadExplorePhotos({ location: local, brand, model, color, event: evento, plate, event_time: firstTime, _extraTimes: times });
       }
 
       function clearExploreFilter() {
-        ["fLocal","fBrand","fModel","fColor","fPlate"].forEach(id => {
+        ["fLocal","fBrand","fModel","fColor","fEvent","fPlate"].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.value = "";
         });
@@ -4494,6 +4503,7 @@
         if (filters.brand)      params.set("brand", filters.brand);
         if (filters.model)      params.set("model", filters.model);
         if (filters.color)      params.set("color", filters.color);
+        if (filters.event)      params.set("event", filters.event);
         if (filters.plate)      params.set("plate", filters.plate);
         if (filters.event_time) params.set("event_time", filters.event_time);
         try {
@@ -5043,6 +5053,10 @@
                         <option value="">Selecione o local *</option>
                         ${PRESET_LOCATIONS.map(l => `<option value="${l}">${l}</option>`).join("")}
                       </select>
+                      <select id="pEvento" class="field">
+                        <option value="">Evento (opcional)</option>
+                        ${PRESET_EVENTS.map(e => `<option value="${e}">${e}</option>`).join("")}
+                      </select>
                       <select id="pMarca" class="field" onchange="updateUploadModels()">
                         <option value="">Marca do carro *</option>
                         ${Object.keys(BRAND_MODELS).sort().map(b => `<option value="${b}">${b}</option>`).join("")}
@@ -5417,6 +5431,7 @@
         fd.append("title", title);
         fd.append("description", document.getElementById("pDesc")?.value || "");
         fd.append("location", local);
+        fd.append("event", document.getElementById("pEvento")?.value || "");
         fd.append("brand", marca);
         fd.append("model_name", modelo);
         fd.append("color", document.getElementById("pCor")?.value || "");
@@ -5954,6 +5969,7 @@
 
       const PRESET_LOCATIONS = ["Avenida Europa","Ponte Cidade Jardim","Interlagos","Autódromo de Goiânia","Autódromo de Curitiba","Jardins","Vila Madalena","Campos do Jordão","Balneário Camboriú","Nova Lima","Mooca","Nürburgring","Outro"];
       const LOCATIONS_OPTIONS = PRESET_LOCATIONS;
+      const PRESET_EVENTS = []; // adicionar eventos conforme forem surgindo
       const BRANDS_OPTIONS = ["Acura","Alfa Romeo","Aston Martin","Audi","Bentley","BMW","BYD","Bugatti","Cadillac","Chevrolet","Chrysler","Citroën","Dodge","Ferrari","Fiat","Ford","Genesis","GMC","Honda","Hyundai","Infiniti","Jaguar","Jeep","Kia","Lamborghini","Land Rover","Lexus","Lincoln","Lotus","Maserati","McLaren","Mercedes-Benz","Mini","Mitsubishi","Nissan","Pagani","Peugeot","Porsche","Ram","Renault","Rolls-Royce","Subaru","Tesla","Toyota","Volkswagen","Volvo"];
 
       // ── Portfolio page (all photographer photos, organized) ────
@@ -6133,6 +6149,13 @@
                     ${LOCATIONS_OPTIONS.map(l => `<option value="${l}" ${p.location === l ? "selected" : ""}>${l}</option>`).join("")}
                   </select>
                 </label>
+                <label>Evento
+                  <select id="ep_event" class="field" style="width:100%">
+                    <option value="">— Selecionar —</option>
+                    ${PRESET_EVENTS.map(e => `<option value="${e}" ${p.event === e ? "selected" : ""}>${e}</option>`).join("")}
+                    ${p.event && !PRESET_EVENTS.includes(p.event) ? `<option value="${p.event}" selected>${p.event}</option>` : ""}
+                  </select>
+                </label>
                 <label>Data do evento <input id="ep_date" class="field" type="date" value="${p.event_date || ""}" oninput="updateEditTitle()"></label>
                 <label>Placa <input id="ep_plate" class="field" value="${p.plate || ""}" placeholder="Só você vê"></label>
               </div>
@@ -6208,6 +6231,7 @@
         fd.append("model_name",  epModel);
         fd.append("color",       v("ep_color")?.trim() || "");
         fd.append("location",    epLocation);
+        fd.append("event",       v("ep_event") || "");
         fd.append("event_date",  epDate);
         fd.append("plate",       v("ep_plate")?.trim() || "");
         const epMode = document.querySelector("#ep_vis_group .vis-mode-btn.active")?.dataset.mode || "post";
