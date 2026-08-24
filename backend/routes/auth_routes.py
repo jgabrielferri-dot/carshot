@@ -32,6 +32,7 @@ def _user_dict(user: models.User) -> dict:
         "bio": user.bio,
         "cpf": user.cpf,
         "phone": user.phone,
+        "is_admin": auth.is_admin(user),
     }
 
 
