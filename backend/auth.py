@@ -15,7 +15,18 @@ SECRET_KEY = os.getenv("SECRET_KEY", "change-this-key-before-deploying")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
+# E-mails com acesso ao painel administrativo (separados por vírgula no .env)
+ADMIN_EMAILS = {
+    e.strip().lower()
+    for e in os.getenv("ADMIN_EMAILS", "").split(",")
+    if e.strip()
+}
+
 bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def is_admin(user: "models.User") -> bool:
+    return bool(user) and (user.email or "").lower() in ADMIN_EMAILS
 
 
 def verify_password(plain: str, hashed: str) -> bool:
@@ -52,6 +63,12 @@ def get_current_user(
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=401, detail="Usuário não encontrado")
+    return user
+
+
+def get_admin_user(user: models.User = Depends(get_current_user)) -> models.User:
+    if not is_admin(user):
+        raise HTTPException(status_code=403, detail="Acesso restrito ao administrador")
     return user
 
 
