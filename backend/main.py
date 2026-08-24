@@ -16,8 +16,9 @@ from routes.photo_routes import router as photo_router
 from routes.user_routes import router as user_router
 from routes.follow_routes import router as follow_router
 from routes.interaction_routes import router as interaction_router
+from routes.order_routes import router as order_router
 
-app = FastAPI(title="CarShot API", version="1.0.0", docs_url=None, redoc_url=None)
+app = FastAPI(title="SpotGrid API", version="1.1.0", docs_url=None, redoc_url=None)
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,6 +33,7 @@ app.include_router(photo_router)
 app.include_router(user_router)
 app.include_router(follow_router)
 app.include_router(interaction_router)
+app.include_router(order_router)
 
 
 @app.get("/health")
