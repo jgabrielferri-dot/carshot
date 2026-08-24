@@ -87,3 +87,35 @@ class Comment(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", foreign_keys=[user_id])
+
+
+class Order(Base):
+    """Pedido de compra de uma foto.
+
+    O fluxo hoje é manual: o comprador abre o pedido pelo site, negocia o
+    pagamento pelo WhatsApp e o administrador marca como pago. A partir daí
+    o download do arquivo original é liberado para o comprador.
+    """
+
+    __tablename__ = "orders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    photo_id = Column(Integer, ForeignKey("photos.id"), nullable=False, index=True)
+    buyer_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    photographer_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    price = Column(Float, nullable=False, default=0.0)
+    commission = Column(Float, nullable=False, default=0.0)   # fica com a plataforma
+    payout = Column(Float, nullable=False, default=0.0)       # repasse ao fotógrafo
+
+    # "pending" (aguardando pagamento) | "paid" (liberado) | "cancelled"
+    status = Column(String, nullable=False, default="pending", index=True)
+    note = Column(Text, nullable=True)                        # anotação interna do admin
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    paid_at = Column(DateTime, nullable=True)
+    downloaded_at = Column(DateTime, nullable=True)
+
+    photo = relationship("Photo", foreign_keys=[photo_id])
+    buyer = relationship("User", foreign_keys=[buyer_id])
+    photographer = relationship("User", foreign_keys=[photographer_id])
