@@ -841,17 +841,15 @@
       .cms-dropdown {
         display: none; position: absolute; z-index: 999;
         top: calc(100% + 6px); left: 0; right: 0;
-        background: #fff; border: 1px solid #d0cece;
+        background: #fffdf9; border: 1px solid #d0cece;
         border-radius: 14px; max-height: 240px; overflow-y: auto;
         box-shadow: 0 10px 30px rgba(0,0,0,.18);
+        color: #171112;
       }
-      @media (prefers-color-scheme: dark) { .cms-dropdown { background: #1e1b1b; border-color: #3a3636; } }
-      :root[data-theme="dark"] .cms-dropdown { background: #1e1b1b; border-color: #3a3636; }
-      :root[data-theme="light"] .cms-dropdown { background: #fff; border-color: #d0cece; }
       .cms-dropdown.open { display: block; }
       .cms-option {
         display: flex; align-items: center; gap: 10px;
-        padding: 9px 14px; cursor: pointer; font-size: 13px; color: var(--text);
+        padding: 9px 14px; cursor: pointer; font-size: 13px; color: #171112;
       }
       .cms-option:hover { background: rgba(0,0,0,.05); }
       .cms-option input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
