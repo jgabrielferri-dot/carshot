@@ -4782,6 +4782,36 @@
           list.innerHTML = `<p class="copy" style="color:var(--faint)">Não foi possível carregar comentários.</p>`;
         }
       }
+      async function _loadRelatedPhotos(photo) {
+        const container = document.getElementById(`relatedPhotos-${photo.id}`);
+        if (!container) return;
+        const params = new URLSearchParams();
+        if (photo.plate) {
+          params.set("plate", photo.plate);
+        } else {
+          if (photo.brand) params.set("brand", photo.brand);
+          if (photo.model) params.set("model", photo.model);
+        }
+        if (!params.toString()) return;
+        try {
+          const all = await apiReq(`/api/photos?${params}`);
+          const related = all.filter(r => r.id !== photo.id);
+          if (!related.length) return;
+          container.innerHTML = `
+            <div class="container" style="padding:0 24px 80px">
+              <h3 style="font-size:18px;font-weight:600;margin:32px 0 16px">Mais fotos deste veículo</h3>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px">
+                ${related.map(r => `
+                  <button onclick="route('post','api-${r.id}')" style="border:0;padding:0;background:transparent;cursor:pointer;border-radius:14px;overflow:hidden;aspect-ratio:4/3;display:block;width:100%">
+                    <img src="${API_BASE}/api/photos/${r.id}/preview" alt="${r.title||''}" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform=''">
+                  </button>
+                `).join("")}
+              </div>
+            </div>
+          `;
+        } catch { /* silently skip */ }
+      }
+
       async function submitComment(photoId) {
         if (!requireLogin()) return;
         const input = document.getElementById(`commentInput-${photoId}`);
@@ -4910,9 +4940,11 @@
                 </aside>
               </div>
               </section>
+              <div id="relatedPhotos-${p.id}"></div>
             `;
-            // Load comments async
+            // Load comments and related photos async
             _loadComments(p.id);
+            _loadRelatedPhotos(p);
           }).catch((err) => {
             view.innerHTML = `
               <section class="page container">
