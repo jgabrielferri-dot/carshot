@@ -47,6 +47,12 @@ class Photo(Base):
     resolution = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+    # Moderação: toda foto nova entra como "pending" e só aparece no site
+    # depois que o administrador aprova. "approved" | "rejected"
+    moderation_status = Column(String, nullable=False, default="pending", index=True)
+    moderation_note = Column(Text, nullable=True)      # motivo da recusa
+    moderated_at = Column(DateTime, nullable=True)
+
     photographer = relationship("User", back_populates="photos")
 
 
