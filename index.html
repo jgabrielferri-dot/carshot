@@ -5250,16 +5250,33 @@
           item.shotAt = await _readExifDateTime(item.file);
         }
 
-        const semExif = _batchFiles.filter(i => !i.shotAt).length;
-        const resumo = document.getElementById(_postMode === "event" ? "bCount" : "scCount");
-        if (resumo) {
-          resumo.innerHTML =
-            `<strong>${_batchFiles.length} foto(s)</strong> selecionada(s).` +
-            (semExif
-              ? ` <span style="color:#b8860b">${semExif} sem horário no arquivo</span> — essas ficam sem horário se você não preencher a data.`
-              : ` Horário lido de todas.`);
-        }
+        _batchUpdateSummary();
         _batchRenderGrid();
+      }
+
+      function _batchUpdateSummary() {
+        const resumo = document.getElementById(_postMode === "event" ? "bCount" : "scCount");
+        if (!resumo) return;
+        if (!_batchFiles.length) {
+          resumo.textContent = "Nenhum arquivo selecionado.";
+          return;
+        }
+        const semExif = _batchFiles.filter(i => !i.shotAt).length;
+        resumo.innerHTML =
+          `<strong>${_batchFiles.length} foto(s)</strong> selecionada(s).` +
+          (semExif
+            ? ` <span style="color:#b8860b">${semExif} sem horário no arquivo</span> — essas ficam sem horário se você não preencher a data.`
+            : ` Horário lido de todas.`);
+      }
+
+      // Tira uma foto da seleção antes de publicar — para quando escolheu uma a mais sem querer.
+      function _batchRemove(i) {
+        const item = _batchFiles[i];
+        if (!item) return;
+        URL.revokeObjectURL(item.url);       // libera a miniatura da memória
+        _batchFiles.splice(i, 1);
+        _batchUpdateSummary();
+        _batchRenderGrid();                  // re-renderiza: os índices mudaram
       }
 
       // Usada nos dois modos com várias fotos. Só o modo "evento" pede placa por foto —
@@ -5273,7 +5290,12 @@
           return;
         }
         grid.innerHTML = _batchFiles.map((item, i) => `
-          <div class="surface" style="padding:10px;border-radius:14px">
+          <div class="surface" style="padding:10px;border-radius:14px;position:relative">
+            <button type="button" onclick="_batchRemove(${i})" title="Remover da seleção"
+                    aria-label="Remover ${item.file.name} da seleção"
+                    style="position:absolute;top:16px;right:16px;z-index:2;width:26px;height:26px;border:none;border-radius:50%;
+                           background:rgba(10,5,5,.66);color:#fff;font-size:15px;line-height:1;cursor:pointer;
+                           display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)">×</button>
             <img src="${item.url}" alt="" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:block">
             <p class="meta" style="margin:8px 0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${item.file.name}">${item.file.name}</p>
             <p class="meta" style="color:${item.shotAt ? "var(--faint)" : "#b8860b"};margin-bottom:${comPlaca ? "8px" : "0"}">
