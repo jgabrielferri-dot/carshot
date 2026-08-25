@@ -7249,18 +7249,53 @@
       // ── Álbuns automáticos ───────────────────────────────────────────────────
       // As pastas nascem dos próprios dados da foto: uma foto entra em quantas
       // pastas fizer sentido (local, marca e evento). Não há álbum manual.
+      // "2026-08-18" -> "18.08.2026"
+      function _dataBR(iso) {
+        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ""));
+        return m ? `${m[3]}.${m[2]}.${m[1]}` : (iso || "");
+      }
+
+      // O álbum de dia usa chave composta "local|data" — é o que separa
+      // "Avenida Europa 18.08.2026" de "Avenida Europa 25.08.2026".
+      const SEP_DIA = "|";
+
       const ALBUM_TIPOS = [
-        { chave: "location", campo: "location", rotulo: "Local",  titulo: "Por local",  sub: "Onde as fotos foram tiradas" },
-        { chave: "event",    campo: "event",    rotulo: "Evento", titulo: "Por evento", sub: "Cada evento fotografado" },
-        { chave: "brand",    campo: "brand",    rotulo: "Marca",  titulo: "Por marca",  sub: "Todas as marcas fotografadas" },
+        {
+          chave: "dia", rotulo: "Dia",
+          titulo: "Por dia", sub: "Cada dia de cobertura em um lugar",
+          valorDe: p => (p.location && p.event_date) ? `${p.location}${SEP_DIA}${p.event_date}` : "",
+          nomeDe: v => { const [loc, d] = v.split(SEP_DIA); return `${loc} ${_dataBR(d)}`; },
+          // mais recente primeiro: é o que a pessoa procura depois do fim de semana
+          ordenar: (a, b) => (b[0].split(SEP_DIA)[1] || "").localeCompare(a[0].split(SEP_DIA)[1] || ""),
+        },
+        {
+          chave: "location", rotulo: "Local",
+          titulo: "Por local", sub: "Onde as fotos foram tiradas",
+          valorDe: p => (p.location || "").trim(),
+        },
+        {
+          chave: "event", rotulo: "Evento",
+          titulo: "Por evento", sub: "Cada evento fotografado",
+          valorDe: p => (p.event || "").trim(),
+        },
+        {
+          chave: "brand", rotulo: "Marca",
+          titulo: "Por marca", sub: "Todas as marcas fotografadas",
+          valorDe: p => (p.brand || "").trim(),
+        },
       ];
+
+      // Nome exibido para um valor de álbum (o de dia precisa formatar a data).
+      function _albumNome(tipo, valor) {
+        return tipo.nomeDe ? tipo.nomeDe(valor) : valor;
+      }
 
       function _montarAlbuns(fotos) {
         const grupos = {};
         ALBUM_TIPOS.forEach(t => { grupos[t.chave] = {}; });
         (fotos || []).forEach(p => {
           ALBUM_TIPOS.forEach(t => {
-            const valor = (p[t.campo] || "").trim();
+            const valor = t.valorDe(p);
             if (!valor) return;
             (grupos[t.chave][valor] = grupos[t.chave][valor] || []).push(p);
           });
@@ -7269,9 +7304,10 @@
       }
 
       // creatorId presente = álbum restrito às fotos daquele fotógrafo.
-      function _albumCard(nome, fotos, tipo, creatorId) {
+      function _albumCard(valor, fotos, tipo, creatorId) {
+        const nome = _albumNome(tipo, valor);
         const capa = fotos[0];
-        const destino = `albuns-filtro/${tipo.chave}/${encodeURIComponent(nome)}${creatorId ? "/" + creatorId : ""}`;
+        const destino = `albuns-filtro/${tipo.chave}/${encodeURIComponent(valor)}${creatorId ? "/" + creatorId : ""}`;
         const capaHtml = capa
           ? `<img src="${API_BASE}/api/photos/${capa.id}/preview" alt="${nome}" loading="lazy"
                   style="width:100%;height:180px;object-fit:cover;border-radius:16px 16px 0 0;display:block">`
@@ -7292,14 +7328,15 @@
         let html = "";
         let algum = false;
         ALBUM_TIPOS.forEach(tipo => {
-          const entradas = Object.entries(grupos[tipo.chave]).sort((a, b) => b[1].length - a[1].length);
+          const entradas = Object.entries(grupos[tipo.chave])
+            .sort(tipo.ordenar || ((a, b) => b[1].length - a[1].length));
           if (!entradas.length) return;
           algum = true;
           html += `
             <div class="dash-section" style="margin-top:34px">
               <div class="dash-section-head"><div><p class="eyebrow">${tipo.titulo}</p><h2>${tipo.sub}</h2></div></div>
               <div class="seller-album-grid" style="margin-top:20px">
-                ${entradas.map(([nome, ps]) => _albumCard(nome, ps, tipo, creatorId)).join("")}
+                ${entradas.map(([valor, ps]) => _albumCard(valor, ps, tipo, creatorId)).join("")}
               </div>
             </div>`;
         });
@@ -7334,15 +7371,22 @@
 
         view.innerHTML = `<section class="page container" style="padding:80px 0;text-align:center"><p class="lead">Carregando…</p></section>`;
         const params = new URLSearchParams();
-        params.set(key, value);
+        if (tipo.chave === "dia") {
+          const [local, data] = value.split(SEP_DIA);
+          params.set("location", local);
+          params.set("event_date", data);
+        } else {
+          params.set(key, value);
+        }
         if (photographerId) params.set("photographer_id", photographerId);
 
         try {
           const photos = await apiReq("/api/photos?" + params.toString());
           // A API faz busca por aproximação; aqui exigimos o valor exato para
           // que "Golf" não traga "Golf GTI" e o total do álbum bata com o card.
-          const exatas = photos.filter(p => (p[tipo.campo] || "").trim() === value);
+          const exatas = photos.filter(p => tipo.valorDe(p) === value);
           const posts = exatas.map(apiPhotoToPost);
+          const nomeAlbum = _albumNome(tipo, value);
 
           let autor = null;
           if (photographerId) {
@@ -7356,7 +7400,7 @@
             <section class="page container">
               <div class="page-title">
                 <p class="eyebrow">${tipo.rotulo}${autor ? " · " + (autor.nickname || autor.name) : ""}</p>
-                <h1>${value}.</h1>
+                <h1>${nomeAlbum}.</h1>
                 <p class="lead" style="margin-top:12px">${posts.length} foto${posts.length !== 1 ? "s" : ""} neste álbum.</p>
                 ${voltar}
               </div>
