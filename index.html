@@ -854,6 +854,11 @@
       .cms-option:hover { background: rgba(0,0,0,.05); }
       .cms-option input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
 
+      @media (max-width: 900px) {
+        .mod-layout { grid-template-columns: 1fr !important; }
+        .mod-layout aside { position: static !important; }
+      }
+
       .photo-wrap { position: relative; overflow: hidden; }
       .photo-wrap img { height: 320px; object-fit: cover; filter: saturate(.88) contrast(.96); }
 
@@ -3568,7 +3573,8 @@
       }
       function accountMenuItems() {
         const adminItem = currentUser.is_admin
-          ? `<button onclick="menuRoute('admin')" style="color:var(--accent);font-weight:600">⚙ Pedidos (admin)</button>`
+          ? `<button onclick="menuRoute('admin')" style="color:var(--accent);font-weight:600">⚙ Pedidos (admin)</button>
+             <button onclick="menuRoute('moderacao')" style="color:var(--accent);font-weight:600">🔍 Moderação (admin)</button>`
           : "";
         if (currentUser.home === "vendedor") {
           return adminItem + `
@@ -6761,10 +6767,18 @@
             const mode = p.is_public && p.is_for_sale ? "both" : p.is_for_sale ? "sale" : "post";
             const badgeClass = mode === "both" ? "badge-both" : mode === "sale" ? "badge-sale" : "badge-post";
             const badgeLabel = mode === "both" ? "Post + Venda" : mode === "sale" ? "Só à venda" : "Post";
+            const emAnalise = p.moderation_status && p.moderation_status !== "approved";
+            const tituloModeracao = p.moderation_status === "rejected"
+              ? "Recusada" + (p.moderation_note ? ": " + p.moderation_note : "")
+              : "Aguardando revisão — só aparece no site depois de aprovada";
             return `
-              <div class="portfolio-card">
-                <img src="${API_BASE}/api/photos/${p.id}/preview" alt="${p.title}" loading="lazy">
+              <div class="portfolio-card"${emAnalise ? ` title="${tituloModeracao.replace(/"/g, "&quot;")}"` : ""}>
+                <img src="${API_BASE}/api/photos/${p.id}/preview" alt="${p.title}" loading="lazy"
+                     style="${emAnalise ? "opacity:.5" : ""}">
                 <span class="portfolio-card-badge ${badgeClass}">${badgeLabel}</span>
+                ${emAnalise ? `<span class="portfolio-card-badge" style="left:8px;right:auto;top:38px;background:${
+                  p.moderation_status === "rejected" ? "rgba(193,18,31,.92)" : "rgba(184,134,11,.92)"};color:#fff">${
+                  p.moderation_status === "rejected" ? "Recusada" : "Em análise"}</span>` : ""}
                 <span class="portfolio-card-title">${p.title}</span>
                 <div class="portfolio-card-actions">
                   <button class="port-mini-btn" onclick="openEditPostForm(${p.id})">Editar</button>
@@ -7981,20 +7995,33 @@
       // ── Painel administrativo de pedidos ─────────────────────────────────────
       let _adminFilter = "";
 
+      function _adminGuard() {
+        if (isLoggedIn && currentUser.is_admin) return true;
+        view.innerHTML = `
+          <section class="page container" style="padding:120px 0;text-align:center">
+            <p class="lead">Área restrita ao administrador.</p>
+            <button class="btn btn-secondary" style="margin-top:16px" onclick="route('home')">Voltar ao início</button>
+          </section>`;
+        return false;
+      }
+
+      function _adminTabs(ativa) {
+        const aba = (id, rota, rotulo) => `
+          <button class="hp-tab ${ativa === id ? "active" : ""}" onclick="route('${rota}')">${rotulo}</button>`;
+        return `<div class="hp-tabs" style="margin-top:18px">
+          ${aba("pedidos", "admin", "Pedidos")}
+          ${aba("moderacao", "moderacao", "Moderação")}
+        </div>`;
+      }
+
       function adminOrdersPage() {
-        if (!isLoggedIn || !currentUser.is_admin) {
-          view.innerHTML = `
-            <section class="page container" style="padding:120px 0;text-align:center">
-              <p class="lead">Área restrita ao administrador.</p>
-              <button class="btn btn-secondary" style="margin-top:16px" onclick="route('home')">Voltar ao início</button>
-            </section>`;
-          return;
-        }
+        if (!_adminGuard()) return;
         view.innerHTML = `
           <section class="container dash-hero">
             <p class="eyebrow">Administração</p>
             <h1>Pedidos.</h1>
             <p class="lead" style="margin-top:14px">Confirme os pagamentos e libere o download para o comprador.</p>
+            ${_adminTabs("pedidos")}
           </section>
           <section class="container" style="padding-bottom:80px">
             <div id="adminTotals" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px"></div>
@@ -8013,6 +8040,310 @@
       function setAdminFilter(status) {
         _adminFilter = status;
         loadAdminOrders();
+      }
+
+      // ── Moderação de fotos ───────────────────────────────────────────────────
+      let _modFila = [];        // fotos da fila atual
+      let _modIndice = 0;       // qual está sendo revisada
+      let _modStatus = "pending";
+      let _modContagem = {};
+      let _modLupa = false;     // lupa ligada/desligada
+      let _modOcupado = false;  // trava enquanto uma decisão está sendo salva
+
+      function moderationPage() {
+        if (!_adminGuard()) return;
+        _modIndice = 0;
+        view.innerHTML = `
+          <section class="container dash-hero">
+            <p class="eyebrow">Administração</p>
+            <h1>Moderação.</h1>
+            <p class="lead" style="margin-top:14px">Confira se rostos e placas estão cobertos antes de a foto entrar no site.</p>
+            ${_adminTabs("moderacao")}
+          </section>
+          <section class="container" style="padding-bottom:80px">
+            <div id="modFiltros" style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap"></div>
+            <div id="modArea"><p class="copy">Carregando fila…</p></div>
+          </section>`;
+        _modCarregar();
+      }
+
+      function setModStatus(status) {
+        _modStatus = status;
+        _modIndice = 0;
+        _modCarregar();
+      }
+
+      async function _modCarregar() {
+        const area = document.getElementById("modArea");
+        if (!area) return;
+        area.innerHTML = `<p class="copy">Carregando fila…</p>`;
+        try {
+          const data = await apiReq(`/api/photos/moderation/queue?status=${_modStatus}`);
+          _modFila = data.photos || [];
+          _modContagem = data.counts || {};
+          if (_modIndice >= _modFila.length) _modIndice = Math.max(0, _modFila.length - 1);
+          _modRenderFiltros();
+          _modRender();
+        } catch (e) {
+          area.innerHTML = `<p class="copy">Erro ao carregar a fila: ${e.message || ""}</p>`;
+        }
+      }
+
+      function _modRenderFiltros() {
+        const el = document.getElementById("modFiltros");
+        if (!el) return;
+        const c = _modContagem;
+        const botao = (id, rotulo, qtd) => `
+          <button class="mini-btn" style="${_modStatus === id ? "background:var(--text);color:#fff;border-color:var(--text)" : ""}"
+                  onclick="setModStatus('${id}')">${rotulo}${qtd ? ` (${qtd})` : ""}</button>`;
+        el.innerHTML =
+          botao("pending",  "Aguardando revisão", c.pending) +
+          botao("approved", "Aprovadas",          c.approved) +
+          botao("rejected", "Recusadas",          c.rejected);
+      }
+
+      function _modRender() {
+        const area = document.getElementById("modArea");
+        if (!area) return;
+
+        if (!_modFila.length) {
+          const vazio = {
+            pending:  ["✅", "Nada na fila", "Todas as fotos enviadas já foram revisadas."],
+            approved: ["📭", "Nenhuma foto aprovada ainda", "As fotos que você aprovar aparecem aqui."],
+            rejected: ["📭", "Nenhuma foto recusada", "As fotos recusadas ficam guardadas aqui."],
+          }[_modStatus];
+          area.innerHTML = `
+            <div class="surface pad" style="text-align:center;padding:64px 24px">
+              <p style="font-size:40px;margin-bottom:14px">${vazio[0]}</p>
+              <h2 style="margin-bottom:8px">${vazio[1]}</h2>
+              <p class="lead" style="max-width:420px;margin:0 auto">${vazio[2]}</p>
+            </div>`;
+          return;
+        }
+
+        const p = _modFila[_modIndice];
+        const pendente = p.moderation_status === "pending";
+        const data = [p.event_date, p.event_time].filter(Boolean).join(" · ");
+
+        area.innerHTML = `
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start" class="mod-layout">
+
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+                <p class="meta" style="margin:0"><strong>${_modIndice + 1} de ${_modFila.length}</strong> · foto #${p.id}</p>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <button class="mini-btn" onclick="_modIr(-1)" ${_modIndice === 0 ? "disabled" : ""}>← Anterior</button>
+                  <button class="mini-btn" onclick="_modIr(1)" ${_modIndice >= _modFila.length - 1 ? "disabled" : ""}>Próxima →</button>
+                </div>
+              </div>
+
+              <div id="modPalco" style="position:relative;background:#0d0a0a;border-radius:18px;overflow:hidden;
+                          display:flex;align-items:center;justify-content:center;min-height:52vh;cursor:zoom-in"
+                   onmousemove="_modMoverLupa(event)" onmouseleave="_modSairLupa()" onclick="_modAlternarLupa()">
+                <img id="modImg" alt="" style="max-width:100%;max-height:74vh;object-fit:contain;display:block">
+                <p id="modCarregando" class="meta" style="position:absolute;color:#fff;margin:0">Carregando imagem…</p>
+                <div id="modLupa" style="display:none;position:absolute;width:230px;height:230px;border-radius:50%;
+                            border:3px solid rgba(255,255,255,.85);box-shadow:0 8px 30px rgba(0,0,0,.5);
+                            pointer-events:none;background-repeat:no-repeat;background-color:#0d0a0a"></div>
+                <p id="modDicaLupa" style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);margin:0;
+                          background:rgba(10,5,5,.7);color:#fff;font-size:12px;padding:6px 14px;border-radius:999px;
+                          pointer-events:none;backdrop-filter:blur(4px)">Clique na imagem para ligar a lupa</p>
+              </div>
+
+              <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center">
+                ${pendente ? `
+                  <button class="btn" style="background:#1a7f37;flex:1;min-width:170px" onclick="_modDecidir('approved')">✓ Aprovar</button>
+                  <button class="btn" style="background:var(--accent);flex:1;min-width:170px" onclick="_modDecidir('rejected')">✕ Recusar</button>
+                ` : `
+                  <span style="flex:1">${_statusModChip(p.moderation_status)}${p.moderation_note ? ` <span class="meta">— ${p.moderation_note}</span>` : ""}</span>
+                  <button class="mini-btn" onclick="_modDecidir('pending')">Voltar para a fila</button>
+                  ${p.moderation_status !== "approved" ? `<button class="mini-btn" onclick="_modDecidir('approved')">Aprovar mesmo assim</button>` : ""}
+                  ${p.moderation_status !== "rejected" ? `<button class="mini-btn" style="color:var(--accent)" onclick="_modDecidir('rejected')">Recusar</button>` : ""}
+                `}
+              </div>
+              <p class="meta" style="margin-top:10px;color:var(--faint)">
+                Atalhos: <strong>A</strong> aprova · <strong>R</strong> recusa · <strong>←</strong> <strong>→</strong> navegam · <strong>Z</strong> liga a lupa
+              </p>
+            </div>
+
+            <aside class="surface pad" style="position:sticky;top:90px">
+              <p class="eyebrow" style="margin-bottom:4px">Enviada por</p>
+              <p style="font-weight:520;font-size:15px;margin:0 0 2px">${p.photographer_name || "—"}</p>
+              <p class="meta" style="margin:0">${p.photographer_email || "—"}</p>
+              ${p.photographer_phone ? `<a class="mini-btn" style="display:inline-flex;margin-top:10px" target="_blank"
+                   href="https://wa.me/${String(p.photographer_phone).replace(/\D/g,"")}">Falar no WhatsApp</a>` : ""}
+
+              <div style="height:1px;background:var(--line);margin:16px 0"></div>
+
+              <p class="eyebrow" style="margin-bottom:8px">O que conferir</p>
+              <ul style="margin:0 0 4px;padding-left:18px;font-size:13px;color:var(--muted);line-height:1.9">
+                <li>Rostos identificáveis cobertos</li>
+                <li>Placa coberta quando em via pública</li>
+                <li>Imagem nítida e bem enquadrada</li>
+              </ul>
+
+              <div style="height:1px;background:var(--line);margin:16px 0"></div>
+
+              <p class="eyebrow" style="margin-bottom:8px">Dados da foto</p>
+              <div class="summary-row"><span>Título</span><strong style="text-align:right">${p.title || "—"}</strong></div>
+              <div class="summary-row"><span>Veículo</span><strong>${[p.photo_brand || p.brand, p.model].filter(Boolean).join(" ") || "—"}</strong></div>
+              <div class="summary-row"><span>Placa cadastrada</span><strong>${p.plate || "—"}</strong></div>
+              <div class="summary-row"><span>Local</span><strong style="text-align:right">${p.location || "—"}</strong></div>
+              ${data ? `<div class="summary-row"><span>Data</span><strong>${data}</strong></div>` : ""}
+              <div class="summary-row"><span>Resolução</span><strong>${p.resolution || "—"}</strong></div>
+              <div class="summary-row"><span>Visibilidade</span><strong>${p.is_for_sale ? (p.is_public ? "Post + venda" : "Só à venda") : "Post público"}</strong></div>
+              ${p.price ? `<div class="summary-row"><span>Preço</span><strong>${_brl(p.price)}</strong></div>` : ""}
+            </aside>
+          </div>`;
+
+        _modLupa = false;
+        _modAtalhosLigar();
+        _modCarregarImagem(p.id);
+      }
+
+      // A imagem em análise exige token, e uma tag <img> não manda cabeçalho.
+      // Por isso baixamos com fetch autenticado e exibimos via blob.
+      let _modBlobUrl = null;
+
+      async function _modCarregarImagem(photoId) {
+        const img = document.getElementById("modImg");
+        const aviso = document.getElementById("modCarregando");
+        if (!img) return;
+        if (_modBlobUrl) { URL.revokeObjectURL(_modBlobUrl); _modBlobUrl = null; }
+
+        const tok = getToken();
+        const cabecalho = tok ? { Authorization: `Bearer ${tok}` } : {};
+        // tenta o original (melhor para conferir rosto e placa); cai no preview se faltar
+        for (const rota of ["original", "preview"]) {
+          try {
+            const res = await fetch(`${API_BASE}/api/photos/${photoId}/${rota}`, { headers: cabecalho });
+            if (!res.ok) continue;
+            const blob = await res.blob();
+            if (!blob.size) continue;
+            _modBlobUrl = URL.createObjectURL(blob);
+            // a foto pode ter mudado enquanto baixava
+            if (document.getElementById("modImg") !== img) { URL.revokeObjectURL(_modBlobUrl); return; }
+            img.src = _modBlobUrl;
+            if (aviso) aviso.remove();
+            return;
+          } catch { /* tenta a próxima rota */ }
+        }
+        if (aviso) aviso.textContent = "Não foi possível carregar a imagem.";
+      }
+
+      function _statusModChip(status) {
+        const mapa = {
+          pending:  ["Aguardando revisão", "#b8860b", "rgba(184,134,11,.12)"],
+          approved: ["Aprovada",           "#1a7f37", "rgba(26,127,55,.12)"],
+          rejected: ["Recusada",           "#c1121f", "rgba(193,18,31,.12)"],
+        };
+        const [txt, cor, fundo] = mapa[status] || mapa.pending;
+        return `<span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;color:${cor};background:${fundo}">${txt}</span>`;
+      }
+
+      function _modIr(passo) {
+        const novo = _modIndice + passo;
+        if (novo < 0 || novo >= _modFila.length) return;
+        _modIndice = novo;
+        _modRender();
+      }
+
+      // ── Lupa: amplia o ponto sob o cursor, para checar rosto e placa ──
+      function _modAlternarLupa() {
+        _modLupa = !_modLupa;
+        const lupa = document.getElementById("modLupa");
+        const dica = document.getElementById("modDicaLupa");
+        const palco = document.getElementById("modPalco");
+        if (lupa) lupa.style.display = _modLupa ? "block" : "none";
+        if (dica) dica.textContent = _modLupa ? "Lupa ligada — mova o cursor · clique para desligar" : "Clique na imagem para ligar a lupa";
+        if (palco) palco.style.cursor = _modLupa ? "zoom-out" : "zoom-in";
+      }
+
+      function _modSairLupa() {
+        const lupa = document.getElementById("modLupa");
+        if (lupa) lupa.style.display = "none";
+      }
+
+      function _modMoverLupa(e) {
+        if (!_modLupa) return;
+        const lupa = document.getElementById("modLupa");
+        const img = document.getElementById("modImg");
+        const palco = document.getElementById("modPalco");
+        if (!lupa || !img || !palco) return;
+
+        const ri = img.getBoundingClientRect();
+        const rp = palco.getBoundingClientRect();
+        const x = e.clientX - ri.left;
+        const y = e.clientY - ri.top;
+        if (x < 0 || y < 0 || x > ri.width || y > ri.height) { lupa.style.display = "none"; return; }
+
+        const escala = 3;                       // 3x é o suficiente para ler uma placa
+        const tam = 230;
+        lupa.style.display = "block";
+        lupa.style.left = (e.clientX - rp.left - tam / 2) + "px";
+        lupa.style.top  = (e.clientY - rp.top  - tam / 2) + "px";
+        lupa.style.backgroundImage = `url("${img.src}")`;
+        lupa.style.backgroundSize = `${ri.width * escala}px ${ri.height * escala}px`;
+        lupa.style.backgroundPosition = `${-(x * escala - tam / 2)}px ${-(y * escala - tam / 2)}px`;
+      }
+
+      async function _modDecidir(status) {
+        // Revisar em série é rápido, então dá para apertar A/R antes de a
+        // decisão anterior terminar. Sem esta trava, a mesma foto receberia
+        // duas decisões e a segunda sobrescreveria a primeira.
+        if (_modOcupado) return;
+        const p = _modFila[_modIndice];
+        if (!p) return;
+
+        let nota = null;
+        if (status === "rejected") {
+          nota = prompt("Motivo da recusa (o fotógrafo verá):", "Rosto ou placa visível — cubra e reenvie.");
+          if (nota === null) return;            // cancelou
+        }
+
+        _modOcupado = true;
+        try {
+          const fd = new FormData();
+          fd.append("status", status);
+          if (nota !== null) fd.append("note", nota);
+          const resp = await apiReq(`/api/photos/${p.id}/moderation`, { method: "PUT", body: fd });
+
+          // Sai da fila atual: mantém o índice para já mostrar a próxima foto.
+          const saiu = _modFila.indexOf(p);
+          if (saiu >= 0) _modFila.splice(saiu, 1);
+          if (resp && resp.counts) _modContagem = resp.counts;   // números vindos do banco
+          if (_modIndice >= _modFila.length) _modIndice = Math.max(0, _modFila.length - 1);
+          _modRenderFiltros();
+          _modRender();
+        } catch (e) {
+          alert("Erro ao salvar: " + (e.message || ""));
+        } finally {
+          _modOcupado = false;
+        }
+      }
+
+      // Atalhos de teclado — o que torna a revisão em série rápida.
+      function _modAtalhosLigar() {
+        document.removeEventListener("keydown", _modAtalho);
+        document.addEventListener("keydown", _modAtalho);
+      }
+
+      function _modAtalho(e) {
+        if (!/^#moderacao/.test(location.hash)) {
+          document.removeEventListener("keydown", _modAtalho);
+          return;
+        }
+        // não sequestra o teclado enquanto se digita em um campo
+        const alvo = e.target;
+        if (alvo && /^(INPUT|TEXTAREA|SELECT)$/.test(alvo.tagName)) return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+        const tecla = e.key.toLowerCase();
+        if (tecla === "a")           { e.preventDefault(); _modDecidir("approved"); }
+        else if (tecla === "r")      { e.preventDefault(); _modDecidir("rejected"); }
+        else if (tecla === "z")      { e.preventDefault(); _modAlternarLupa(); }
+        else if (e.key === "ArrowLeft")  { e.preventDefault(); _modIr(-1); }
+        else if (e.key === "ArrowRight") { e.preventDefault(); _modIr(1); }
       }
 
       function _brl(v) {
@@ -8528,6 +8859,7 @@
         else if (name === "sucesso") success();
         else if (name === "conformidade") complianceChecklist();
         else if (name === "admin") adminOrdersPage();
+        else if (name === "moderacao") moderationPage();
         else home();
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -8634,6 +8966,13 @@
                   <strong style="color:var(--accent)">#${p.id}</strong>${p.plate ? " · Placa " + p.plate : ""}
                 </p>
                 <p class="meta">${p.is_public ? "Público" : "Privado"} · ${p.is_for_sale ? "À venda" : "Não vendável"}${p.price ? " · R$ " + p.price : ""}</p>
+                ${p.moderation_status && p.moderation_status !== "approved" ? `
+                <p class="meta" style="margin-top:6px">
+                  ${_statusModChip(p.moderation_status)}
+                  ${p.moderation_status === "pending"
+                    ? ` <span style="color:var(--faint)">— só aparece no site após a revisão</span>`
+                    : (p.moderation_note ? ` <span style="color:var(--faint)">— ${p.moderation_note}</span>` : "")}
+                </p>` : ""}
                 <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
                   <button class="mini-btn" onclick="togglePhotoPublic(${p.id},${p.is_public})">${p.is_public ? "Tornar privado" : "Tornar público"}</button>
                   <button class="mini-btn" onclick="downloadOriginal(${p.id}, this)">Baixar original</button>
