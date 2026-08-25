@@ -5136,30 +5136,14 @@
       }
 
       // ── Envio em lote ────────────────────────────────────────────────────────
-      let _batchFiles = [];     // [{file, url, shotAt, plate}]
+      let _batchFiles = [];        // [{file, url, shotAt, plate}]
       let _batchBusy  = false;
+      let _postMode   = "single";  // "single" | "same-car" | "event"
 
-      function batchUploadPage() {
-        if (!isLoggedIn || currentUser.account_type !== "photographer") {
-          view.innerHTML = `<section class="page container" style="padding:120px 0;text-align:center">
-            <h2>Acesso restrito</h2>
-            <p class="lead" style="margin:20px auto 0">Apenas fotógrafos podem publicar fotos.</p>
-          </section>`;
-          return;
-        }
-        _batchFiles = [];
-        view.innerHTML = `
-          <section class="container dash-hero">
-            <p class="eyebrow">Fotógrafo</p>
-            <h1>Envio em lote.</h1>
-            <p class="lead" style="margin-top:14px">Suba um evento inteiro de uma vez. O horário de cada foto é lido automaticamente do arquivo.</p>
-          </section>
-          <section class="container section-slim dash-shell">
-            ${sellerShell("lote")}
-            <div class="dash-content">
-
-              <div class="dash-section">
-                <div class="dash-section-head"><div><p class="eyebrow">Passo 1</p><h2>Escolha as fotos</h2></div></div>
+      function _eventFormHTML() {
+        return `
+              <div class="dash-section" style="margin-top:22px">
+                <div class="dash-section-head"><div><p class="eyebrow">Passo 2</p><h2>Escolha as fotos</h2></div></div>
                 <input type="file" id="bFiles" accept="image/jpeg,image/png,image/webp" multiple
                        style="display:none" onchange="_batchPick(this.files)">
                 <button class="btn btn-secondary" onclick="document.getElementById('bFiles').click()">Selecionar arquivos</button>
@@ -5167,8 +5151,8 @@
               </div>
 
               <div class="dash-section" style="margin-top:22px">
-                <div class="dash-section-head"><div><p class="eyebrow">Passo 2</p><h2>Dados do evento</h2></div></div>
-                <p class="copy" style="margin-bottom:18px">Valem para todas as fotos do lote.</p>
+                <div class="dash-section-head"><div><p class="eyebrow">Passo 3</p><h2>Dados do evento</h2></div></div>
+                <p class="copy" style="margin-bottom:18px">Valem para todas as fotos do lote. A placa é a única coisa que muda de foto para foto.</p>
                 <div class="form">
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
                     <label>Local
@@ -5219,10 +5203,10 @@
               </div>
 
               <div class="dash-section" style="margin-top:22px">
-                <div class="dash-section-head"><div><p class="eyebrow">Passo 3</p><h2>Placas</h2></div></div>
+                <div class="dash-section-head"><div><p class="eyebrow">Passo 4</p><h2>Placa de cada foto</h2></div></div>
                 <p class="copy" style="margin-bottom:18px">A placa é o que o comprador usa para achar o carro dele. Preencha o que der — dá para completar depois em Meu acervo.</p>
                 <div id="bGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px">
-                  <p class="copy">Selecione arquivos no passo 1.</p>
+                  <p class="copy">Selecione os arquivos no passo 2.</p>
                 </div>
               </div>
 
@@ -5234,10 +5218,7 @@
                   </div>
                   <p id="bProgressText" class="meta" style="margin-top:10px"></p>
                 </div>
-              </div>
-
-            </div>
-          </section>`;
+              </div>`;
       }
 
       function _batchVis(btn) {
@@ -5260,7 +5241,8 @@
       async function _batchPick(fileList) {
         const files = Array.from(fileList || []);
         if (!files.length) return;
-        document.getElementById("bCount").textContent = `Lendo ${files.length} arquivo(s)…`;
+        const contador = document.getElementById(_postMode === "event" ? "bCount" : "scCount");
+        if (contador) contador.textContent = `Lendo ${files.length} arquivo(s)…`;
 
         _batchFiles = files.map(f => ({ file: f, url: URL.createObjectURL(f), shotAt: null, plate: "" }));
         // lê o horário do EXIF de cada arquivo, sem travar a interface
@@ -5269,26 +5251,37 @@
         }
 
         const semExif = _batchFiles.filter(i => !i.shotAt).length;
-        document.getElementById("bCount").innerHTML =
-          `<strong>${_batchFiles.length} foto(s)</strong> selecionada(s).` +
-          (semExif ? ` <span style="color:#b8860b">${semExif} sem horário no arquivo</span> — essas ficam sem horário se você não preencher a data acima.` : ` Horário lido de todas.`);
+        const resumo = document.getElementById(_postMode === "event" ? "bCount" : "scCount");
+        if (resumo) {
+          resumo.innerHTML =
+            `<strong>${_batchFiles.length} foto(s)</strong> selecionada(s).` +
+            (semExif
+              ? ` <span style="color:#b8860b">${semExif} sem horário no arquivo</span> — essas ficam sem horário se você não preencher a data.`
+              : ` Horário lido de todas.`);
+        }
         _batchRenderGrid();
       }
 
+      // Usada nos dois modos com várias fotos. Só o modo "evento" pede placa por foto —
+      // no modo "mesmo carro" a placa do formulário vale para todas.
       function _batchRenderGrid() {
-        const grid = document.getElementById("bGrid");
+        const comPlaca = _postMode === "event";
+        const grid = document.getElementById(comPlaca ? "bGrid" : "scGrid");
         if (!grid) return;
-        if (!_batchFiles.length) { grid.innerHTML = `<p class="copy">Selecione arquivos no passo 1.</p>`; return; }
+        if (!_batchFiles.length) {
+          grid.innerHTML = `<p class="copy">Nenhum arquivo selecionado.</p>`;
+          return;
+        }
         grid.innerHTML = _batchFiles.map((item, i) => `
           <div class="surface" style="padding:10px;border-radius:14px">
             <img src="${item.url}" alt="" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:block">
             <p class="meta" style="margin:8px 0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${item.file.name}">${item.file.name}</p>
-            <p class="meta" style="color:${item.shotAt ? "var(--faint)" : "#b8860b"};margin-bottom:8px">
+            <p class="meta" style="color:${item.shotAt ? "var(--faint)" : "#b8860b"};margin-bottom:${comPlaca ? "8px" : "0"}">
               ${item.shotAt ? "🕒 " + item.shotAt.date.split("-").reverse().join("/") + " " + item.shotAt.time : "sem horário no arquivo"}
             </p>
-            <input class="field" style="padding:8px 10px;font-size:13px" placeholder="Placa"
+            ${comPlaca ? `<input class="field" style="padding:8px 10px;font-size:13px" placeholder="Placa"
                    maxlength="8" value="${item.plate}"
-                   oninput="_batchFiles[${i}].plate = this.value.toUpperCase(); this.value = this.value.toUpperCase()">
+                   oninput="_batchFiles[${i}].plate = this.value.toUpperCase(); this.value = this.value.toUpperCase()">` : ""}
           </div>
         `).join("");
       }
@@ -5466,17 +5459,70 @@
             ${sellerShell("novo-post")}
             <div class="dash-content">
               <div class="dash-section">
-                <p class="lead" style="margin-bottom:28px">Faça o upload, preencha os dados do veículo e defina visibilidade e preço.</p>
+                <div class="dash-section-head"><div><p class="eyebrow">Passo 1</p><h2>O que você vai publicar</h2></div></div>
+                <div class="vis-mode-group" id="postModeGroup" style="margin-top:6px">
+                  <button type="button" class="vis-mode-btn ${_postMode === "single" ? "active" : ""}" data-mode="single" onclick="setPostMode('single')">
+                    <span class="vis-icon">🖼</span>Uma foto<span>Publicação avulsa, com ajuste de recorte</span>
+                  </button>
+                  <button type="button" class="vis-mode-btn ${_postMode === "same-car" ? "active" : ""}" data-mode="same-car" onclick="setPostMode('same-car')">
+                    <span class="vis-icon">🚗</span>Várias do mesmo carro<span>Mesma placa e dados para todas</span>
+                  </button>
+                  <button type="button" class="vis-mode-btn ${_postMode === "event" ? "active" : ""}" data-mode="event" onclick="setPostMode('event')">
+                    <span class="vis-icon">🏁</span>Evento inteiro<span>Muitas fotos, uma placa por foto</span>
+                  </button>
+                </div>
+              </div>
+              <div id="postModeArea"></div>
+            </div>
+          </section>
+        `;
+        _renderPostMode();
+      }
+
+      function setPostMode(mode) {
+        _postMode = mode;
+        _batchFiles = [];
+        _croppedBlob = null;
+        document.querySelectorAll("#postModeGroup .vis-mode-btn").forEach(b => {
+          b.classList.toggle("active", b.dataset.mode === mode);
+        });
+        _renderPostMode();
+      }
+
+      function _renderPostMode() {
+        const area = document.getElementById("postModeArea");
+        if (!area) return;
+        area.innerHTML = _postMode === "event" ? _eventFormHTML() : _singleFormHTML();
+        if (_postMode === "event") { _batchUpdateModels(); return; }
+        _attachSingleFormHandlers();
+      }
+
+      // Formulário compartilhado pelos modos "uma foto" e "várias do mesmo carro".
+      // Os dados preenchidos aqui — inclusive a placa — valem para todas as fotos enviadas.
+      function _singleFormHTML() {
+        const varias = _postMode === "same-car";
+        return `
+              <div class="dash-section" style="margin-top:22px">
+                <p class="lead" style="margin-bottom:28px">${varias
+                  ? "Selecione todas as fotos deste carro. Os dados abaixo, incluindo a placa, valem para todas."
+                  : "Faça o upload, preencha os dados do veículo e defina visibilidade e preço."}</p>
                 <div class="split" style="gap:24px">
                   <div>
                     <div class="upload-box" id="uploadBox" style="cursor:pointer" onclick="document.getElementById('photoFile').click()">
-                      <div><h3>Upload de imagem</h3><p class="copy" style="margin-top:10px">Clique ou arraste uma foto (JPEG, PNG ou WebP).</p></div>
+                      <div><h3>${varias ? "Upload de imagens" : "Upload de imagem"}</h3><p class="copy" style="margin-top:10px">${varias
+                        ? "Clique ou arraste as fotos deste carro (JPEG, PNG ou WebP)."
+                        : "Clique ou arraste uma foto (JPEG, PNG ou WebP)."}</p></div>
                     </div>
-                    <input type="file" id="photoFile" accept="image/jpeg,image/png,image/webp" style="display:none">
+                    <input type="file" id="photoFile" accept="image/jpeg,image/png,image/webp" ${varias ? "multiple" : ""} style="display:none">
+                    ${varias ? `
+                    <p id="scCount" class="meta" style="margin-top:12px">Nenhum arquivo selecionado.</p>
+                    <div id="scGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:12px"></div>
+                    ` : `
                     <div id="previewWrap" style="display:none;margin-top:14px;position:relative">
                       <img id="photoPreview" style="border-radius:16px;max-height:320px;width:100%;object-fit:cover;display:block">
                       <button onclick="_initCropCanvas();openCropTool(_cropFile)" style="position:absolute;bottom:10px;right:10px;background:rgba(10,5,5,.72);color:#fff;border:none;border-radius:999px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(4px)">✂ Ajustar recorte</button>
                     </div>
+                    `}
                   </div>
                   <div class="surface pad">
                     <div class="post-form">
@@ -5546,37 +5592,50 @@
                       <div id="pPrecoRow" style="display:none">
                         <input id="pPreco" class="field" type="number" min="0" step="1" placeholder="Preço em R$ (obrigatório para venda)">
                       </div>
-                      <button class="btn" id="submitBtn" onclick="submitPost()">Publicar foto</button>
+                      <button class="btn" id="submitBtn" onclick="${varias ? "_submitSameCar()" : "submitPost()"}">${varias ? "Publicar fotos" : "Publicar foto"}</button>
                       <p id="uploadStatus" style="margin-top:10px;font-size:14px;color:var(--muted)"></p>
+                      ${varias ? `
+                      <div id="scProgressWrap" style="display:none;margin-top:6px">
+                        <div style="height:8px;background:var(--panel-soft);border-radius:20px;overflow:hidden">
+                          <div id="scProgressBar" style="height:100%;width:0%;background:var(--accent);transition:width .2s"></div>
+                        </div>
+                        <p id="scProgressText" class="meta" style="margin-top:10px"></p>
+                      </div>` : ""}
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </section>
-        `;
-        // attach file handlers
+              </div>`;
+      }
+
+      function _attachSingleFormHandlers() {
+        const varias = _postMode === "same-car";
         const fileInput = document.getElementById("photoFile");
-        const previewWrap = document.getElementById("previewWrap");
         const box = document.getElementById("uploadBox");
-        fileInput.addEventListener("change", () => {
-          const f = fileInput.files[0];
-          if (!f) return;
-          _croppedBlob = null;
-          _initCropCanvas();
-          openCropTool(f);
-        });
-        box.addEventListener("dragover", e => { e.preventDefault(); box.style.borderColor = "var(--accent)"; });
-        box.addEventListener("dragleave", () => { box.style.borderColor = ""; });
-        box.addEventListener("drop", e => {
-          e.preventDefault(); box.style.borderColor = "";
-          const f = e.dataTransfer.files[0];
-          if (f && f.type.startsWith("image/")) {
-            const dt = new DataTransfer(); dt.items.add(f); fileInput.files = dt.files;
+        if (!fileInput || !box) return;
+
+        const receber = (files) => {
+          if (varias) {
+            _batchPick(files);                 // lê EXIF e monta a grade de miniaturas
+          } else {
+            const f = files[0];
+            if (!f) return;
             _croppedBlob = null;
             _initCropCanvas();
             openCropTool(f);
           }
+        };
+
+        fileInput.addEventListener("change", () => receber(fileInput.files));
+        box.addEventListener("dragover", e => { e.preventDefault(); box.style.borderColor = "var(--accent)"; });
+        box.addEventListener("dragleave", () => { box.style.borderColor = ""; });
+        box.addEventListener("drop", e => {
+          e.preventDefault(); box.style.borderColor = "";
+          const imagens = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
+          if (!imagens.length) return;
+          const dt = new DataTransfer();
+          (varias ? imagens : [imagens[0]]).forEach(f => dt.items.add(f));
+          fileInput.files = dt.files;
+          receber(dt.files);
         });
       }
 
@@ -5839,6 +5898,96 @@
         sel.innerHTML = models.length
           ? `<option value="">Selecione o modelo</option>` + models.map(m => `<option value="${m}">${m}</option>`).join("")
           : `<option value="">Selecione a marca primeiro</option>`;
+      }
+
+      // Modo "várias do mesmo carro": um único conjunto de dados — placa incluída —
+      // aplicado a todas as fotos selecionadas. Sem recorte, porque são muitas.
+      async function _submitSameCar() {
+        if (_batchBusy) return;
+        if (!_batchFiles.length) { alert("Selecione as fotos deste carro."); return; }
+
+        const marca   = document.getElementById("pMarca")?.value.trim() || "";
+        const modelo  = document.getElementById("pModelo")?.value.trim() || "";
+        const local   = document.getElementById("pLocal")?.value.trim() || "";
+        const evento  = document.getElementById("pEvento")?.value || "";
+        const cor     = document.getElementById("pCor")?.value || "";
+        const placa   = document.getElementById("pPlaca")?.value.trim().toUpperCase() || "";
+        const dataVal = document.getElementById("pData")?.value || "";
+        const horario = document.getElementById("pHorario")?.value || "";
+        const desc    = document.getElementById("pDesc")?.value || "";
+        const status  = document.getElementById("uploadStatus");
+
+        if (!marca) { alert("Selecione a marca do carro."); return; }
+        if (!local) { alert("Selecione o local."); return; }
+
+        const visMode = document.querySelector("#visModeGroup .vis-mode-btn.active")?.dataset.mode || "post";
+        if ((visMode === "sale" || visMode === "both") && !currentUser.phone) {
+          status.textContent = "⚠ Preencha seu celular nas configurações de conta antes de colocar fotos à venda.";
+          status.style.color = "#c0392b";
+          return;
+        }
+        const preco = document.getElementById("pPreco")?.value;
+        if ((visMode === "sale" || visMode === "both") && !preco) { alert("Informe o preço."); return; }
+
+        const dataFmt = dataVal ? new Date(dataVal + "T12:00:00").toLocaleDateString("pt-BR", {day:"2-digit",month:"short",year:"numeric"}) : "";
+        const partes = [marca, modelo, local].filter(Boolean);
+        const title = partes.length ? partes.join(" ") + (dataFmt ? " — " + dataFmt : "") : "Sem título";
+
+        _batchBusy = true;
+        const btn = document.getElementById("submitBtn");
+        btn.disabled = true; btn.textContent = "Enviando…";
+        status.textContent = "";
+        document.getElementById("scProgressWrap").style.display = "block";
+
+        const total = _batchFiles.length;
+        let feitos = 0, erros = 0;
+        const bar = document.getElementById("scProgressBar");
+        const txt = document.getElementById("scProgressText");
+        const marcar = () => {
+          bar.style.width = Math.round((feitos + erros) / total * 100) + "%";
+          txt.textContent = `${feitos + erros} de ${total} — ${feitos} enviada(s)` + (erros ? `, ${erros} com erro` : "");
+        };
+        marcar();
+
+        const enviar = async (item) => {
+          const fd = new FormData();
+          fd.append("file", item.file);
+          fd.append("title", title);
+          fd.append("description", desc);
+          fd.append("location", local);
+          fd.append("event", evento);
+          fd.append("brand", marca);
+          fd.append("model_name", modelo);
+          fd.append("color", cor);
+          fd.append("plate", placa);          // mesma placa para todas — é o mesmo carro
+          fd.append("event_date", dataVal);
+          fd.append("event_time", horario);   // vazio deixa o servidor usar o EXIF
+          fd.append("is_public",   (visMode === "post" || visMode === "both") ? "true" : "false");
+          fd.append("is_for_sale", (visMode === "sale" || visMode === "both") ? "true" : "false");
+          if (preco) fd.append("price", preco);
+          const res = await fetch(API_BASE + "/api/photos", {
+            method: "POST", headers: { "Authorization": `Bearer ${getToken()}` }, body: fd
+          });
+          if (!res.ok) throw new Error(await res.text());
+        };
+
+        const fila = _batchFiles.slice();
+        const trabalhador = async () => {
+          while (fila.length) {
+            const item = fila.shift();
+            try { await enviar(item); feitos++; }
+            catch (e) { erros++; console.warn("falha no envio de", item.file.name, e); }
+            marcar();
+          }
+        };
+        await Promise.all([trabalhador(), trabalhador(), trabalhador()]);
+
+        _batchBusy = false;
+        btn.disabled = false; btn.textContent = "Publicar fotos";
+        txt.innerHTML = erros
+          ? `<strong>${feitos} foto(s) publicada(s)</strong> e ${erros} com erro.`
+          : `<strong>${feitos} foto(s) publicada(s) com sucesso.</strong>`;
+        if (feitos && !erros) setTimeout(() => route("vendedor", "editar-posts"), 1200);
       }
 
       async function submitPost() {
@@ -6253,7 +6402,6 @@
           <aside class="dash-menu">
             <button class="${activePage === 'dashboard' ? 'active' : ''}" onclick="route('vendedor')">Dashboard</button>
             <button class="${activePage === 'novo-post' ? 'active' : ''}" onclick="route('novo-post')">Novo post</button>
-            <button class="${activePage === 'lote' ? 'active' : ''}" onclick="route('lote')">Envio em lote</button>
             <button class="${activePage === 'editar-posts' ? 'active' : ''}" onclick="route('vendedor','editar-posts')">Meu acervo</button>
             <button class="${activePage === 'albuns' ? 'active' : ''}" onclick="route('vendedor','albuns')">Álbuns</button>
             <button class="${activePage === 'vendas' ? 'active' : ''}" onclick="route('vendedor','vendas')">Vendas</button>
@@ -8309,7 +8457,7 @@
           photographerProfile(creatorId, tabName || "portfolio");
         }
         else if (name === "novo-post") createPostPage();
-        else if (name === "lote") batchUploadPage();
+        else if (name === "lote") { _postMode = "event"; createPostPage(); }   // atalho antigo
         else if (name === "albuns") autoAlbumsPage();
         else if (name === "albuns-filtro") {
           const parts = payload.split("/");
