@@ -122,6 +122,7 @@ def list_photos(
     event: Optional[str] = None,
     plate: Optional[str] = None,
     photographer_id: Optional[int] = None,
+    event_date: Optional[str] = None,
     event_time: Optional[str] = None,
     q: Optional[str] = None,
     db: Session = Depends(get_db),
@@ -151,6 +152,9 @@ def list_photos(
         query = query.filter(models.Photo.location.ilike(f"%{location}%"))
     if event:
         query = query.filter(models.Photo.event.ilike(f"%{event}%"))
+    if event_date:
+        # data é exata: um álbum de dia não pode misturar dias vizinhos
+        query = query.filter(models.Photo.event_date == event_date.strip())
     if event_time:
         query = query.filter(models.Photo.event_time == event_time)
     if photographer_id:
