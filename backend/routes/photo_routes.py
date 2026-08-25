@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import RedirectResponse
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from sqlalchemy.orm import Session
 from PIL import Image
 
@@ -86,6 +86,8 @@ def _photo_dict(photo: models.Photo, *, include_plate: bool = False, db=None) ->
         "is_public": photo.is_public,
         "is_for_sale": photo.is_for_sale,
         "resolution": photo.resolution,
+        "moderation_status": photo.moderation_status,
+        "moderation_note": photo.moderation_note,
         "photographer_id": photo.photographer_id,
         "photographer_name": photo.photographer.name if photo.photographer else None,
         "photographer_nickname": photo.photographer.nickname if photo.photographer else None,
@@ -161,10 +163,90 @@ def list_photos(
     result = []
     for p in all_photos:
         is_owner = current_user and current_user.id == p.photographer_id
+        # Fotos ainda não aprovadas só aparecem para o próprio fotógrafo,
+        # que assim acompanha a situação delas em Meu acervo.
+        if p.moderation_status != "approved" and not is_owner:
+            continue
         if p.is_public or p.is_for_sale or is_owner:
             result.append(_photo_dict(p, include_plate=bool(is_owner), db=db))
 
     return result
+
+
+MODERATION_STATUSES = {"pending", "approved", "rejected"}
+
+
+@router.get("/moderation/queue")
+def moderation_queue(
+    status: str = "pending",
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(auth.get_admin_user),
+):
+    """Fila de revisão. Traz a placa e o contato do fotógrafo, que o
+    administrador precisa para conferir e para cobrar correção."""
+    if status not in MODERATION_STATUSES:
+        raise HTTPException(status_code=400, detail="Status inválido")
+
+    photos = (
+        db.query(models.Photo)
+        .filter(models.Photo.moderation_status == status)
+        .order_by(models.Photo.created_at.asc())   # mais antigas primeiro
+        .all()
+    )
+
+    contagem = dict(
+        db.query(models.Photo.moderation_status, func.count(models.Photo.id))
+        .group_by(models.Photo.moderation_status)
+        .all()
+    )
+
+    itens = []
+    for p in photos:
+        d = _photo_dict(p, include_plate=True, db=db)
+        d["original_url"] = f"/api/photos/{p.id}/original"
+        d["photographer_email"] = p.photographer.email if p.photographer else None
+        d["photographer_phone"] = p.photographer.phone if p.photographer else None
+        d["moderated_at"] = p.moderated_at.isoformat() if p.moderated_at else None
+        itens.append(d)
+
+    return {
+        "counts": {s: contagem.get(s, 0) for s in MODERATION_STATUSES},
+        "photos": itens,
+    }
+
+
+@router.put("/{photo_id}/moderation")
+def set_moderation(
+    photo_id: int,
+    status: str = Form(...),
+    note: Optional[str] = Form(default=None),
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(auth.get_admin_user),
+):
+    if status not in MODERATION_STATUSES:
+        raise HTTPException(status_code=400, detail="Status inválido")
+
+    photo = db.query(models.Photo).filter(models.Photo.id == photo_id).first()
+    if not photo:
+        raise HTTPException(status_code=404, detail="Foto não encontrada")
+
+    photo.moderation_status = status
+    photo.moderation_note = (note or "").strip() or None
+    photo.moderated_at = datetime.utcnow() if status != "pending" else None
+    db.commit()
+    db.refresh(photo)
+
+    # Devolve a contagem junto para a tela não precisar recalcular por conta
+    # própria — evita que os números da fila saiam do lugar.
+    contagem = dict(
+        db.query(models.Photo.moderation_status, func.count(models.Photo.id))
+        .group_by(models.Photo.moderation_status)
+        .all()
+    )
+    return {
+        "photo": _photo_dict(photo, include_plate=True, db=db),
+        "counts": {s: contagem.get(s, 0) for s in MODERATION_STATUSES},
+    }
 
 
 @router.post("")
@@ -244,12 +326,25 @@ async def upload_photo(
 
 
 @router.get("/{photo_id}/preview")
-def get_preview(photo_id: int, db: Session = Depends(get_db)):
+def get_preview(
+    photo_id: int,
+    db: Session = Depends(get_db),
+    current_user: Optional[models.User] = Depends(auth.get_current_user_optional),
+):
     photo = db.query(models.Photo).filter(models.Photo.id == photo_id).first()
     if not photo:
         raise HTTPException(status_code=404, detail="Foto não encontrada")
     if not photo.is_public and not photo.is_for_sale:
         raise HTTPException(status_code=403, detail="Foto privada")
+
+    # Enquanto não passa pela moderação, a imagem pode conter rosto ou placa
+    # à mostra — só o autor e o administrador conseguem vê-la.
+    if photo.moderation_status != "approved":
+        pode_ver = current_user and (
+            current_user.id == photo.photographer_id or auth.is_admin(current_user)
+        )
+        if not pode_ver:
+            raise HTTPException(status_code=403, detail="Foto em análise")
 
     # Redireciona para URL pública no Supabase Storage
     url = photo.watermarked_path if (photo.is_for_sale and not photo.is_public and photo.watermarked_path) else photo.original_path
@@ -267,7 +362,8 @@ def get_original(
     photo = db.query(models.Photo).filter(models.Photo.id == photo_id).first()
     if not photo:
         raise HTTPException(status_code=404, detail="Foto não encontrada")
-    if photo.photographer_id != current_user.id:
+    # O administrador precisa do arquivo em alta para conferir rosto e placa.
+    if photo.photographer_id != current_user.id and not auth.is_admin(current_user):
         raise HTTPException(status_code=403, detail="Acesso não autorizado")
     if not photo.original_path:
         raise HTTPException(status_code=404, detail="Arquivo não encontrado")
@@ -287,6 +383,10 @@ def get_photo(
     is_owner = current_user and current_user.id == photo.photographer_id
     if not photo.is_public and not photo.is_for_sale and not is_owner:
         raise HTTPException(status_code=403, detail="Foto privada")
+    if photo.moderation_status != "approved" and not is_owner and not (
+        current_user and auth.is_admin(current_user)
+    ):
+        raise HTTPException(status_code=403, detail="Foto em análise")
 
     return _photo_dict(photo, include_plate=bool(is_owner), db=db)
 
