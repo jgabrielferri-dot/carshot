@@ -5113,8 +5113,13 @@
                 <div class="tabs">
                   <button class="tab-btn ${tab === 'portfolio' ? 'active' : ''}" onclick="route('perfil','${creatorId}/portfolio')">Portfólio</button>
                   <button class="tab-btn ${tab === 'posts' ? 'active' : ''}" onclick="route('perfil','${creatorId}/posts')">Posts</button>
+                  <button class="tab-btn ${tab === 'albuns' ? 'active' : ''}" onclick="route('perfil','${creatorId}/albuns')">Álbuns</button>
                 </div>
-                ${tab === "posts"
+                ${tab === "albuns"
+                  ? _albumSecoesHTML(apiPhotos, creatorId, isOwner
+                      ? "Nenhum álbum ainda. Publique fotos com marca, local ou evento para as pastas aparecerem aqui."
+                      : "Este fotógrafo ainda não tem álbuns.")
+                  : tab === "posts"
                   ? (displayPosts.length
                       ? `<div class="gallery-grid">${displayPosts.map(galleryCard).join("")}</div>`
                       : (isOwner
@@ -7062,27 +7067,10 @@
 
           if (isLoggedIn && currentUser.id) {
             apiReq("/api/photos?photographer_id=" + currentUser.id).then(photos => {
-              const brandMap = {}, locationMap = {};
-              photos.forEach(p => {
-                if (p.brand) { if (!brandMap[p.brand]) brandMap[p.brand] = []; brandMap[p.brand].push(p); }
-                if (p.location) { if (!locationMap[p.location]) locationMap[p.location] = []; locationMap[p.location].push(p); }
-              });
               const grid = document.getElementById("sellerAlbumGrid");
               if (!grid) return;
-              const all = [
-                ...Object.entries(locationMap).map(([k,v]) => ({name:k, count:v.length, type:"Local", thumb:v[0]})),
-                ...Object.entries(brandMap).map(([k,v]) => ({name:k, count:v.length, type:"Marca", thumb:v[0]}))
-              ];
-              if (!all.length) { grid.innerHTML = `<p class="copy">Nenhum álbum ainda. Publique fotos com marca e local para criar pastas automáticas.</p>`; return; }
-              grid.innerHTML = `<div class="seller-album-grid">${all.map(a => `
-                <article class="seller-album-card">
-                  <img src="${a.thumb ? API_BASE+"/api/photos/"+a.thumb.id+"/preview" : ""}" alt="${a.name}" style="height:160px;width:100%;object-fit:cover;border-radius:16px 16px 0 0">
-                  <div class="album-body">
-                    <p class="eyebrow">${a.type}</p>
-                    <h3>${a.name}</h3>
-                    <div class="album-meta"><span>${a.type}</span><span>${a.count} foto${a.count!==1?"s":""}</span></div>
-                  </div>
-                </article>`).join("")}</div>`;
+              grid.innerHTML = _albumSecoesHTML(photos, `api-creator-${currentUser.id}`,
+                "Nenhum álbum ainda. Publique fotos com marca, local ou evento para as pastas aparecerem aqui.");
             }).catch(() => {
               const grid = document.getElementById("sellerAlbumGrid");
               if (grid) grid.innerHTML = `<p class="copy">Erro ao carregar álbuns.</p>`;
@@ -7258,41 +7246,70 @@
         }
       }
 
+      // ── Álbuns automáticos ───────────────────────────────────────────────────
+      // As pastas nascem dos próprios dados da foto: uma foto entra em quantas
+      // pastas fizer sentido (local, marca e evento). Não há álbum manual.
+      const ALBUM_TIPOS = [
+        { chave: "location", campo: "location", rotulo: "Local",  titulo: "Por local",  sub: "Onde as fotos foram tiradas" },
+        { chave: "event",    campo: "event",    rotulo: "Evento", titulo: "Por evento", sub: "Cada evento fotografado" },
+        { chave: "brand",    campo: "brand",    rotulo: "Marca",  titulo: "Por marca",  sub: "Todas as marcas fotografadas" },
+      ];
+
+      function _montarAlbuns(fotos) {
+        const grupos = {};
+        ALBUM_TIPOS.forEach(t => { grupos[t.chave] = {}; });
+        (fotos || []).forEach(p => {
+          ALBUM_TIPOS.forEach(t => {
+            const valor = (p[t.campo] || "").trim();
+            if (!valor) return;
+            (grupos[t.chave][valor] = grupos[t.chave][valor] || []).push(p);
+          });
+        });
+        return grupos;
+      }
+
+      // creatorId presente = álbum restrito às fotos daquele fotógrafo.
+      function _albumCard(nome, fotos, tipo, creatorId) {
+        const capa = fotos[0];
+        const destino = `albuns-filtro/${tipo.chave}/${encodeURIComponent(nome)}${creatorId ? "/" + creatorId : ""}`;
+        const capaHtml = capa
+          ? `<img src="${API_BASE}/api/photos/${capa.id}/preview" alt="${nome}" loading="lazy"
+                  style="width:100%;height:180px;object-fit:cover;border-radius:16px 16px 0 0;display:block">`
+          : `<div style="height:180px;background:var(--panel-soft);border-radius:16px 16px 0 0"></div>`;
+        return `
+          <button class="seller-album-card" style="border:0;padding:0;text-align:left;cursor:pointer;background:transparent"
+                  onclick="location.hash='${destino}'">
+            ${capaHtml}
+            <div class="album-body">
+              <h3>${nome}</h3>
+              <div class="album-meta"><span>${tipo.rotulo}</span><span>${fotos.length} foto${fotos.length !== 1 ? "s" : ""}</span></div>
+            </div>
+          </button>`;
+      }
+
+      function _albumSecoesHTML(fotos, creatorId, vazioTexto) {
+        const grupos = _montarAlbuns(fotos);
+        let html = "";
+        let algum = false;
+        ALBUM_TIPOS.forEach(tipo => {
+          const entradas = Object.entries(grupos[tipo.chave]).sort((a, b) => b[1].length - a[1].length);
+          if (!entradas.length) return;
+          algum = true;
+          html += `
+            <div class="dash-section" style="margin-top:34px">
+              <div class="dash-section-head"><div><p class="eyebrow">${tipo.titulo}</p><h2>${tipo.sub}</h2></div></div>
+              <div class="seller-album-grid" style="margin-top:20px">
+                ${entradas.map(([nome, ps]) => _albumCard(nome, ps, tipo, creatorId)).join("")}
+              </div>
+            </div>`;
+        });
+        return algum ? html : `<p class="copy" style="margin-top:40px;text-align:center">${vazioTexto}</p>`;
+      }
+
       async function autoAlbumsPage() {
         view.innerHTML = `<section class="page container" style="padding:80px 0;text-align:center"><p class="lead">Carregando álbuns…</p></section>`;
         try {
           const photos = await apiReq("/api/photos");
-          // Group by brand
-          const brandMap = {};
-          const locationMap = {};
-          photos.forEach(p => {
-            if (p.brand) {
-              if (!brandMap[p.brand]) brandMap[p.brand] = [];
-              brandMap[p.brand].push(p);
-            }
-            if (p.location) {
-              if (!locationMap[p.location]) locationMap[p.location] = [];
-              locationMap[p.location].push(p);
-            }
-          });
-
-          const brandAlbums = Object.entries(brandMap).sort((a,b) => b[1].length - a[1].length);
-          const locationAlbums = Object.entries(locationMap).sort((a,b) => b[1].length - a[1].length);
-
-          function albumCard(name, count, photos, filterKey, filterVal) {
-            const thumb = photos[0];
-            const thumbUrl = thumb ? `${API_BASE}/api/photos/${thumb.id}/preview` : "";
-            return `
-              <button class="seller-album-card" style="border:0;padding:0;text-align:left;cursor:pointer;background:transparent"
-                onclick="applyAlbumFilter('${filterKey}','${encodeURIComponent(name)}')">
-                ${thumbUrl ? `<img src="${thumbUrl}" alt="${name}" style="width:100%;height:180px;object-fit:cover;border-radius:16px 16px 0 0">` : `<div style="height:180px;background:var(--panel-soft);border-radius:16px 16px 0 0"></div>`}
-                <div class="album-body">
-                  <h3>${name}</h3>
-                  <div class="album-meta"><span>${filterVal}</span><span>${count} foto${count !== 1 ? "s" : ""}</span></div>
-                </div>
-              </button>`;
-          }
-
           view.innerHTML = `
             <section class="page container">
               <div class="page-title">
@@ -7300,56 +7317,52 @@
                 <h1>Acervo organizado.</h1>
                 <p class="lead" style="margin-top:12px">Pastas geradas automaticamente a partir dos dados de cada foto.</p>
               </div>
-
-              ${locationAlbums.length ? `
-                <div class="dash-section" style="margin-top:40px">
-                  <div class="dash-section-head"><div><p class="eyebrow">Por local</p><h2>Onde as fotos foram tiradas</h2></div></div>
-                  <div class="seller-album-grid" style="margin-top:20px">
-                    ${locationAlbums.map(([loc, ps]) => albumCard(loc, ps.length, ps, "location", "Local")).join("")}
-                  </div>
-                </div>` : ""}
-
-              ${brandAlbums.length ? `
-                <div class="dash-section" style="margin-top:40px">
-                  <div class="dash-section-head"><div><p class="eyebrow">Por marca</p><h2>Todas as marcas fotografadas</h2></div></div>
-                  <div class="seller-album-grid" style="margin-top:20px">
-                    ${brandAlbums.map(([brand, ps]) => albumCard(brand, ps.length, ps, "brand", "Marca")).join("")}
-                  </div>
-                </div>` : ""}
-
-              ${!locationAlbums.length && !brandAlbums.length ? `
-                <p class="copy" style="margin-top:40px;text-align:center">Nenhum álbum ainda. Assim que fotógrafos publicarem fotos com marca e local, as pastas aparecem aqui automaticamente.</p>` : ""}
+              ${_albumSecoesHTML(photos, null,
+                "Nenhum álbum ainda. Assim que fotógrafos publicarem fotos com marca, local ou evento, as pastas aparecem aqui automaticamente.")}
             </section>`;
         } catch {
           view.innerHTML = `<section class="page container" style="padding:80px 0;text-align:center"><p class="lead">Erro ao carregar álbuns.</p></section>`;
         }
       }
 
-      function applyAlbumFilter(key, encodedValue) {
-        // Navigate to explore with filter pre-applied
-        location.hash = `albuns-filtro/${key}/${encodedValue}`;
-      }
+      // creatorId ("api-creator-7") restringe o álbum às fotos daquele fotógrafo.
+      async function albumFilterPage(key, encodedValue, creatorId) {
+        const value = decodeURIComponent(encodedValue || "");
+        const tipo = ALBUM_TIPOS.find(t => t.chave === key) || ALBUM_TIPOS[0];
+        const idMatch = String(creatorId || "").match(/^api-creator-(\d+)$/);
+        const photographerId = idMatch ? idMatch[1] : null;
 
-      async function albumFilterPage(key, encodedValue) {
-        const value = decodeURIComponent(encodedValue);
         view.innerHTML = `<section class="page container" style="padding:80px 0;text-align:center"><p class="lead">Carregando…</p></section>`;
         const params = new URLSearchParams();
         params.set(key, value);
+        if (photographerId) params.set("photographer_id", photographerId);
+
         try {
           const photos = await apiReq("/api/photos?" + params.toString());
-          const posts = photos.map(apiPhotoToPost);
-          const label = key === "brand" ? "Marca" : "Local";
+          // A API faz busca por aproximação; aqui exigimos o valor exato para
+          // que "Golf" não traga "Golf GTI" e o total do álbum bata com o card.
+          const exatas = photos.filter(p => (p[tipo.campo] || "").trim() === value);
+          const posts = exatas.map(apiPhotoToPost);
+
+          let autor = null;
+          if (photographerId) {
+            autor = await apiReq(`/api/users/${photographerId}`).catch(() => null);
+          }
+          const voltar = photographerId
+            ? `<button class="btn btn-secondary" style="margin-top:16px" onclick="route('perfil','api-creator-${photographerId}/albuns')">← Álbuns de ${autor ? (autor.nickname || autor.name) : "este fotógrafo"}</button>`
+            : `<button class="btn btn-secondary" style="margin-top:16px" onclick="route('albuns')">← Todos os álbuns</button>`;
+
           view.innerHTML = `
             <section class="page container">
               <div class="page-title">
-                <p class="eyebrow">${label}</p>
+                <p class="eyebrow">${tipo.rotulo}${autor ? " · " + (autor.nickname || autor.name) : ""}</p>
                 <h1>${value}.</h1>
                 <p class="lead" style="margin-top:12px">${posts.length} foto${posts.length !== 1 ? "s" : ""} neste álbum.</p>
-                <button class="btn btn-secondary" style="margin-top:16px" onclick="route('albuns')">← Todos os álbuns</button>
+                ${voltar}
               </div>
               ${posts.length
                 ? `<div class="gallery-grid" style="margin-top:32px">${posts.map(galleryCard).join("")}</div>`
-                : `<p class="copy" style="margin-top:40px">Nenhuma foto pública neste álbum ainda.</p>`}
+                : `<p class="copy" style="margin-top:40px">Nenhuma foto neste álbum ainda.</p>`}
             </section>`;
         } catch {
           view.innerHTML = `<section class="page container" style="padding:80px 0;text-align:center"><p class="lead">Erro ao carregar.</p></section>`;
@@ -8845,7 +8858,7 @@
         else if (name === "albuns") autoAlbumsPage();
         else if (name === "albuns-filtro") {
           const parts = payload.split("/");
-          albumFilterPage(parts[0], parts.slice(1).join("/"));
+          albumFilterPage(parts[0], parts[1], parts[2]);
         }
         else if (name === "album") albumPage(payload);
         else if (name === "foto") photoPage(payload);
