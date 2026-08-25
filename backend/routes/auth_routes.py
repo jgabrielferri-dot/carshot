@@ -14,11 +14,16 @@ class RegisterRequest(BaseModel):
     name: str
     password: str
     account_type: str  # "buyer" or "photographer"
+    phone: str = ""
 
 
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+
+def _only_digits(value: str) -> str:
+    return "".join(c for c in (value or "") if c.isdigit())
 
 
 def _user_dict(user: models.User) -> dict:
@@ -45,11 +50,16 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     if db.query(models.User).filter(models.User.email == req.email.lower()).first():
         raise HTTPException(status_code=400, detail="E-mail já cadastrado")
 
+    phone = (req.phone or "").strip()
+    if len(_only_digits(phone)) < 10:
+        raise HTTPException(status_code=400, detail="Informe um celular válido com DDD")
+
     user = models.User(
         email=req.email.lower().strip(),
         name=req.name.strip(),
         password_hash=auth.hash_password(req.password),
         account_type=req.account_type,
+        phone=phone,
     )
     db.add(user)
     db.commit()
