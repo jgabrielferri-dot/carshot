@@ -3155,7 +3155,6 @@
           <a href="#explorar" data-route="explorar">Explorar</a>
           <a href="#como" data-route="como">Como funciona</a>
           <a href="#sobre" data-route="sobre">Quem somos</a>
-          <a href="#feed" data-route="feed">Feed</a>
           <a href="#albuns" data-route="albuns">Álbuns</a>
         </nav>
         <div class="header-actions">
@@ -3295,10 +3294,6 @@
       <button class="mbn-tab" id="mbn-explorar" onclick="route('explorar')" aria-label="Explorar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <span>Explorar</span>
-      </button>
-      <button class="mbn-tab" id="mbn-feed" onclick="route('feed')" aria-label="Feed">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        <span>Feed</span>
       </button>
       <button class="mbn-tab" id="mbn-albuns" onclick="route('albuns')" aria-label="Álbuns">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
@@ -3507,7 +3502,7 @@
       function money(value) { return `R$ ${value}`; }
       function route(name, payload) { location.hash = payload ? `${name}/${payload}` : name; }
 
-      const _mbnMap = { home: 'mbn-home', explorar: 'mbn-explorar', feed: 'mbn-feed', albuns: 'mbn-albuns', vendedor: 'mbn-perfil', comprador: 'mbn-perfil', perfil: 'mbn-perfil', como: null, sobre: null };
+      const _mbnMap = { home: 'mbn-home', explorar: 'mbn-explorar', feed: 'mbn-explorar', albuns: 'mbn-albuns', vendedor: 'mbn-perfil', comprador: 'mbn-perfil', perfil: 'mbn-perfil', como: null, sobre: null };
       function _updateBottomNav(name) {
         document.querySelectorAll('.mbn-tab').forEach(b => b.classList.remove('active'));
         const id = _mbnMap[name];
@@ -5111,20 +5106,13 @@
                   </div>
                 </div>
                 <div class="tabs">
-                  <button class="tab-btn ${tab === 'portfolio' ? 'active' : ''}" onclick="route('perfil','${creatorId}/portfolio')">Portfólio</button>
-                  <button class="tab-btn ${tab === 'posts' ? 'active' : ''}" onclick="route('perfil','${creatorId}/posts')">Posts</button>
+                  <button class="tab-btn ${tab !== 'albuns' ? 'active' : ''}" onclick="route('perfil','${creatorId}/portfolio')">Portfólio</button>
                   <button class="tab-btn ${tab === 'albuns' ? 'active' : ''}" onclick="route('perfil','${creatorId}/albuns')">Álbuns</button>
                 </div>
                 ${tab === "albuns"
                   ? _albumSecoesHTML(apiPhotos, creatorId, isOwner
                       ? "Nenhum álbum ainda. Publique fotos com marca, local ou evento para as pastas aparecerem aqui."
                       : "Este fotógrafo ainda não tem álbuns.")
-                  : tab === "posts"
-                  ? (displayPosts.length
-                      ? `<div class="gallery-grid">${displayPosts.map(galleryCard).join("")}</div>`
-                      : (isOwner
-                          ? `<p class="empty">Nenhum post ainda. <button class="btn btn-secondary" style="margin-left:10px" onclick="route('novo-post')">Publicar agora</button></p>`
-                          : `<p class="empty">Este fotógrafo ainda não publicou posts.</p>`))
                   : (displayCards.length
                       ? `<div class="gallery-grid">${displayCards.map(galleryCard).join("")}</div>`
                       : `<p class="empty">${isOwner ? "Nenhuma foto no portfólio ainda." : "Este fotógrafo ainda não tem fotos no portfólio."}</p>`)}
@@ -5220,15 +5208,7 @@
                   <label>Data do evento <span class="meta">— deixe vazio para usar a data de cada arquivo</span>
                     <input id="bData" class="field" type="date" style="color:var(--text)">
                   </label>
-                  <div>
-                    <p class="eyebrow" style="margin-bottom:8px">Visibilidade</p>
-                    <div class="vis-mode-group" id="bVisGroup">
-                      <button type="button" class="vis-mode-btn active" data-mode="post"  onclick="_batchVis(this)">Post público</button>
-                      <button type="button" class="vis-mode-btn" data-mode="sale"  onclick="_batchVis(this)">Só à venda</button>
-                      <button type="button" class="vis-mode-btn" data-mode="both"  onclick="_batchVis(this)">Post + venda</button>
-                    </div>
-                  </div>
-                  <label id="bPrecoRow" style="display:none">Preço por foto (R$)
+                  <label>Preço por foto (R$)
                     <input id="bPreco" class="field" type="number" min="0" step="1" placeholder="100">
                   </label>
                 </div>
@@ -5251,13 +5231,6 @@
                   <p id="bProgressText" class="meta" style="margin-top:10px"></p>
                 </div>
               </div>`;
-      }
-
-      function _batchVis(btn) {
-        document.querySelectorAll("#bVisGroup .vis-mode-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        const mode = btn.dataset.mode;
-        document.getElementById("bPrecoRow").style.display = (mode === "sale" || mode === "both") ? "block" : "none";
       }
 
       function _batchUpdateModels() {
@@ -5423,15 +5396,15 @@
         const modelo = document.getElementById("bModelo").value;
         const cor    = document.getElementById("bCor").value;
         const data   = document.getElementById("bData").value;
-        const mode   = document.querySelector("#bVisGroup .vis-mode-btn.active")?.dataset.mode || "post";
+        // Toda foto do site é exclusivamente para venda.
         const preco  = document.getElementById("bPreco")?.value;
 
         if (!local) { alert("Selecione o local do evento."); return; }
-        if ((mode === "sale" || mode === "both") && !currentUser.phone) {
-          alert("Preencha seu celular em Dados da conta antes de colocar fotos à venda.");
+        if (!currentUser.phone) {
+          alert("Preencha seu celular em Dados da conta antes de publicar.");
           return;
         }
-        if ((mode === "sale" || mode === "both") && !preco) { alert("Informe o preço por foto."); return; }
+        if (!preco) { alert("Informe o preço por foto."); return; }
 
         _batchBusy = true;
         const btn = document.getElementById("bSubmit");
@@ -5463,8 +5436,8 @@
           // vazio de propósito quando não há data fixa: o servidor preenche pelo EXIF
           fd.append("event_date", data || "");
           fd.append("event_time", "");
-          fd.append("is_public",   (mode === "post" || mode === "both") ? "true" : "false");
-          fd.append("is_for_sale", (mode === "sale" || mode === "both") ? "true" : "false");
+          fd.append("is_public", "false");
+          fd.append("is_for_sale", "true");
           if (preco) fd.append("price", preco);
 
           const res = await fetch(API_BASE + "/api/photos", {
@@ -5632,20 +5605,7 @@
                           <option value="23:00">23:00 às 23:30</option><option value="23:30">23:30 às 24:00</option>
                         </select>
                       </div>
-                      <div class="vis-mode-group" id="visModeGroup">
-                        <button type="button" class="vis-mode-btn active" data-mode="post" onclick="selectVisMode(this)">
-                          <span class="vis-icon">📢</span>Post público<span>Aparece no feed e na galeria</span>
-                        </button>
-                        <button type="button" class="vis-mode-btn" data-mode="sale" onclick="selectVisMode(this)">
-                          <span class="vis-icon">💰</span>Só à venda<span>Privado, com marca d'água</span>
-                        </button>
-                        <button type="button" class="vis-mode-btn" data-mode="both" onclick="selectVisMode(this)">
-                          <span class="vis-icon">🔥</span>Post + Venda<span>No feed e disponível para compra</span>
-                        </button>
-                      </div>
-                      <div id="pPrecoRow" style="display:none">
-                        <input id="pPreco" class="field" type="number" min="0" step="1" placeholder="Preço em R$ (obrigatório para venda)">
-                      </div>
+                      <input id="pPreco" class="field" type="number" min="0" step="1" placeholder="Preço em R$">
                       <button class="btn" id="submitBtn" onclick="${varias ? "_submitSameCar()" : "submitPost()"}">${varias ? "Publicar fotos" : "Publicar foto"}</button>
                       <p id="uploadStatus" style="margin-top:10px;font-size:14px;color:var(--muted)"></p>
                       ${varias ? `
@@ -5974,14 +5934,13 @@
         if (!marca) { alert("Selecione a marca do carro."); return; }
         if (!local) { alert("Selecione o local."); return; }
 
-        const visMode = document.querySelector("#visModeGroup .vis-mode-btn.active")?.dataset.mode || "post";
-        if ((visMode === "sale" || visMode === "both") && !currentUser.phone) {
-          status.textContent = "⚠ Preencha seu celular nas configurações de conta antes de colocar fotos à venda.";
+        if (!currentUser.phone) {
+          status.textContent = "⚠ Preencha seu celular nas configurações de conta antes de publicar.";
           status.style.color = "#c0392b";
           return;
         }
         const preco = document.getElementById("pPreco")?.value;
-        if ((visMode === "sale" || visMode === "both") && !preco) { alert("Informe o preço."); return; }
+        if (!preco) { alert("Informe o preço."); return; }
 
         const dataFmt = dataVal ? new Date(dataVal + "T12:00:00").toLocaleDateString("pt-BR", {day:"2-digit",month:"short",year:"numeric"}) : "";
         const partes = [marca, modelo, local].filter(Boolean);
@@ -6016,8 +5975,8 @@
           fd.append("plate", placa);          // mesma placa para todas — é o mesmo carro
           fd.append("event_date", dataVal);
           fd.append("event_time", horario);   // vazio deixa o servidor usar o EXIF
-          fd.append("is_public",   (visMode === "post" || visMode === "both") ? "true" : "false");
-          fd.append("is_for_sale", (visMode === "sale" || visMode === "both") ? "true" : "false");
+          fd.append("is_public", "false");
+          fd.append("is_for_sale", "true");
           if (preco) fd.append("price", preco);
           const res = await fetch(API_BASE + "/api/photos", {
             method: "POST", headers: { "Authorization": `Bearer ${getToken()}` }, body: fd
@@ -6074,17 +6033,22 @@
         fd.append("plate", document.getElementById("pPlaca")?.value || "");
         fd.append("event_date", dataVal);
         fd.append("event_time", document.getElementById("pHorario")?.value || "");
-        const visMode = document.querySelector("#visModeGroup .vis-mode-btn.active")?.dataset.mode || "post";
-        if ((visMode === "sale" || visMode === "both") && !currentUser.phone) {
+        // Toda foto do site é exclusivamente para venda.
+        if (!currentUser.phone) {
           btn.disabled = false; btn.textContent = "Publicar foto";
-          document.getElementById("uploadStatus").textContent = "⚠ Preencha seu celular nas configurações de conta antes de colocar fotos à venda.";
+          document.getElementById("uploadStatus").textContent = "⚠ Preencha seu celular nas configurações de conta antes de publicar.";
           document.getElementById("uploadStatus").style.color = "#c0392b";
           return;
         }
-        fd.append("is_public",   (visMode === "post" || visMode === "both") ? "true" : "false");
-        fd.append("is_for_sale", (visMode === "sale" || visMode === "both") ? "true" : "false");
         const preco = document.getElementById("pPreco")?.value;
-        if (preco) fd.append("price", preco);
+        if (!preco) {
+          btn.disabled = false; btn.textContent = "Publicar foto";
+          alert("Informe o preço da foto.");
+          return;
+        }
+        fd.append("is_public", "false");
+        fd.append("is_for_sale", "true");
+        fd.append("price", preco);
         try {
           const tok = getToken();
           const res = await fetch(API_BASE + "/api/photos", {
@@ -6381,7 +6345,7 @@
         try {
           const users = await apiReq("/api/follow/following/details");
           if (!users.length) {
-            el.innerHTML = `<p class="copy" style="color:var(--faint)">Você ainda não segue nenhum fotógrafo. <button class="btn btn-secondary" style="margin-left:8px;min-height:30px;padding:0 12px;font-size:13px" onclick="route('feed')">Descobrir</button></p>`;
+            el.innerHTML = `<p class="copy" style="color:var(--faint)">Você ainda não segue nenhum fotógrafo. <button class="btn btn-secondary" style="margin-left:8px;min-height:30px;padding:0 12px;font-size:13px" onclick="route('explorar')">Descobrir</button></p>`;
             return;
           }
           el.innerHTML = `<div style="display:flex;gap:18px;overflow-x:auto;padding-bottom:6px">
@@ -6409,7 +6373,7 @@
           let photos = await apiReq("/api/interactions/saves/mine/photos");
           if (limit) photos = photos.slice(0, limit);
           if (!photos.length) {
-            el.innerHTML = `<p class="copy" style="color:var(--faint)">Você ainda não salvou nenhuma foto. <button class="btn btn-secondary" style="margin-left:8px;min-height:30px;padding:0 12px;font-size:13px" onclick="route('feed')">Explorar feed</button></p>`;
+            el.innerHTML = `<p class="copy" style="color:var(--faint)">Você ainda não salvou nenhuma foto. <button class="btn btn-secondary" style="margin-left:8px;min-height:30px;padding:0 12px;font-size:13px" onclick="route('explorar')">Explorar fotos</button></p>`;
             return;
           }
           const posts = photos.map(apiPhotoToPost);
@@ -6427,7 +6391,7 @@
           let photos = await apiReq("/api/interactions/likes/mine/photos");
           if (limit) photos = photos.slice(0, limit);
           if (!photos.length) {
-            el.innerHTML = `<p class="copy" style="color:var(--faint)">Você ainda não curtiu nenhuma foto. <button class="btn btn-secondary" style="margin-left:8px;min-height:30px;padding:0 12px;font-size:13px" onclick="route('feed')">Explorar feed</button></p>`;
+            el.innerHTML = `<p class="copy" style="color:var(--faint)">Você ainda não curtiu nenhuma foto. <button class="btn btn-secondary" style="margin-left:8px;min-height:30px;padding:0 12px;font-size:13px" onclick="route('explorar')">Explorar fotos</button></p>`;
             return;
           }
           const posts = photos.map(apiPhotoToPost);
@@ -6647,7 +6611,7 @@
               ${buyerNav("interacoes")}
               <div class="dash-content">
                 <div class="dash-section">
-                  <div class="dash-section-head"><div><p class="eyebrow">Curtidas</p><h2>Fotos curtidas</h2></div><button class="btn btn-secondary" onclick="route('feed')">Abrir feed</button></div>
+                  <div class="dash-section-head"><div><p class="eyebrow">Curtidas</p><h2>Fotos curtidas</h2></div><button class="btn btn-secondary" onclick="route('explorar')">Explorar fotos</button></div>
                   <div id="likedFeed"><p class="copy" style="padding:16px">Carregando...</p></div>
                 </div>
               </div>
@@ -6706,7 +6670,7 @@
               <div class="dash-section">
                 <div class="dash-section-head">
                   <div><p class="eyebrow">Comunidade</p><h2>Seguindo</h2></div>
-                  <button class="btn btn-secondary" onclick="route('feed')">Ver feed</button>
+                  <button class="btn btn-secondary" onclick="route('explorar')">Explorar fotos</button>
                 </div>
                 <div id="followingCircles"><p class="copy" style="color:var(--faint)">Carregando...</p></div>
               </div>
@@ -6840,9 +6804,6 @@
                 <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:16px 0 12px">
                   <div class="port-filter-tabs">
                     <button class="port-tab active" data-filter="all" onclick="_setPortfolioFilter('all')">Todas</button>
-                    <button class="port-tab" data-filter="post" onclick="_setPortfolioFilter('post')">Posts</button>
-                    <button class="port-tab" data-filter="sale" onclick="_setPortfolioFilter('sale')">Só à venda</button>
-                    <button class="port-tab" data-filter="both" onclick="_setPortfolioFilter('both')">Post + Venda</button>
                   </div>
                   <input class="field" style="max-width:220px;padding:8px 14px;font-size:13px"
                     placeholder="Buscar no acervo…"
@@ -6932,19 +6893,7 @@
                 <label>Placa <input id="ep_plate" class="field" value="${p.plate || ""}" placeholder="Só você vê"></label>
               </div>
 
-              <div class="vis-mode-group" id="ep_vis_group">
-                <button type="button" class="vis-mode-btn ${!p.is_for_sale ? "active" : ""}" data-mode="post" onclick="selectVisMode(this)">
-                  📢 Post público<span>Aparece no feed e explorar</span>
-                </button>
-                <button type="button" class="vis-mode-btn ${!p.is_public && p.is_for_sale ? "active" : ""}" data-mode="sale" onclick="selectVisMode(this)">
-                  💰 Só à venda<span>Portfolio privado, com marca d'água</span>
-                </button>
-                <button type="button" class="vis-mode-btn ${p.is_public && p.is_for_sale ? "active" : ""}" data-mode="both" onclick="selectVisMode(this)">
-                  📢💰 Post + Venda<span>No feed e disponível para compra</span>
-                </button>
-              </div>
-
-              <div id="ep_price_row" style="display:${p.is_for_sale ? "block" : "none"}">
+              <div>
                 <label>Preço de venda (R$) <input id="ep_price" class="field" type="number" min="0" step="0.01" value="${p.price || ""}"></label>
               </div>
 
@@ -7006,15 +6955,15 @@
         fd.append("event",       v("ep_event") || "");
         fd.append("event_date",  epDate);
         fd.append("plate",       v("ep_plate")?.trim() || "");
-        const epMode = document.querySelector("#ep_vis_group .vis-mode-btn.active")?.dataset.mode || "post";
-        if ((epMode === "sale" || epMode === "both") && !currentUser.phone) {
+        // Toda foto do site é exclusivamente para venda.
+        if (!currentUser.phone) {
           btn.disabled = false; btn.textContent = "Salvar alterações";
-          document.getElementById("savePostStatus").textContent = "⚠ Preencha seu celular nas configurações de conta antes de colocar fotos à venda.";
+          document.getElementById("savePostStatus").textContent = "⚠ Preencha seu celular nas configurações de conta antes de publicar.";
           document.getElementById("savePostStatus").style.color = "#c0392b";
           return;
         }
-        fd.append("is_public",   (epMode === "post" || epMode === "both") ? "true" : "false");
-        fd.append("is_for_sale", (epMode === "sale" || epMode === "both") ? "true" : "false");
+        fd.append("is_public", "false");
+        fd.append("is_for_sale", "true");
         const price = v("ep_price");
         if (price) fd.append("price", price);
         try {
@@ -7192,23 +7141,8 @@
                   <div><p class="eyebrow">Álbuns inteligentes</p><h2>Pastas geradas pelos dados da foto</h2></div>
                   <button class="btn btn-secondary" onclick="route('vendedor','albuns')">Abrir página</button>
                 </div>
-                <p class="copy" style="margin-bottom:22px">Marca, local, placa, evento e cor ajudam a organizar automaticamente o acervo para quem busca o próprio carro.</p>
-                <div class="seller-album-grid">
-                  ${sellerAlbums.map((album) => `
-                    <article class="seller-album-card">
-                      <img src="${album.image}" alt="${album.title}">
-                      <div class="album-body">
-                        <p class="eyebrow">${album.type}</p>
-                        <h3>${album.title}</h3>
-                        <div class="album-meta">
-                          <span>${album.detail}</span>
-                          <span>${album.count} fotos</span>
-                        </div>
-                        <p class="copy" style="margin-top:12px;font-size:13px">${album.last}</p>
-                      </div>
-                    </article>
-                  `).join("")}
-                </div>
+                <p class="copy" style="margin-bottom:22px">Marca, local, data e evento organizam o acervo automaticamente para quem busca o próprio carro.</p>
+                <div id="dashAlbumGrid"><p class="copy">Carregando…</p></div>
               </div>
               <div class="dash-section" id="seller-sales">
                 <div class="dash-section-head">
@@ -7221,7 +7155,7 @@
               <div class="dash-section">
                 <div class="dash-section-head">
                   <div><p class="eyebrow">Comunidade</p><h2>Seguindo</h2></div>
-                  <button class="btn btn-secondary" onclick="route('feed')">Ver feed</button>
+                  <button class="btn btn-secondary" onclick="route('explorar')">Explorar fotos</button>
                 </div>
                 <div id="followingCirclesSeller"><p class="copy" style="color:var(--faint)">Carregando...</p></div>
               </div>
@@ -7243,6 +7177,16 @@
             `;
           }).catch(() => {});
           loadMyPhotosInto("myPhotosGrid");
+          // Prévia dos álbuns reais do fotógrafo — nada de exemplo fictício.
+          apiReq("/api/photos?photographer_id=" + currentUser.id).then(fotos => {
+            const grid = document.getElementById("dashAlbumGrid");
+            if (!grid) return;
+            grid.innerHTML = _albumSecoesHTML(fotos, `api-creator-${currentUser.id}`,
+              "Nenhum álbum ainda. As pastas aparecem sozinhas assim que você publicar fotos.");
+          }).catch(() => {
+            const grid = document.getElementById("dashAlbumGrid");
+            if (grid) grid.innerHTML = `<p class="copy">Erro ao carregar álbuns.</p>`;
+          });
         }
       }
 
@@ -8886,7 +8830,7 @@
         if (name === "home") home();
         else if (name === "explorar") explore();
         else if (name === "como") howPage();
-        else if (name === "feed") feedPage();
+        else if (name === "feed") explore();   // feed desativado por ora
         else if (name === "candidatura-fotografo") photographerApplicationPage();
         else if (name === "comprador") buyerDashboard(payload || "dashboard");
         else if (name === "vendedor") sellerDashboard(payload || "dashboard");
@@ -8922,33 +8866,6 @@
       }
 
       // ── Visibility mode selector helper ───────────────────────
-      function selectVisMode(btn) {
-        const mode = btn.dataset.mode;
-        const group = btn.closest(".vis-mode-group");
-
-        // Remove any existing warning
-        const existingWarn = group.parentElement.querySelector(".vis-mode-warn");
-        if (existingWarn) existingWarn.remove();
-
-        // Gate: photographer must have phone to sell
-        if ((mode === "sale" || mode === "both") && isLoggedIn && currentUser.account_type === "photographer") {
-          if (!currentUser.phone) {
-            const warn = document.createElement("div");
-            warn.className = "vis-mode-warn";
-            warn.style.cssText = "font-size:13px;color:#a94442;margin-top:10px;padding:12px 16px;background:#fdf2f2;border-radius:12px;border:1px solid #f5c6cb;display:flex;align-items:center;justify-content:space-between;gap:10px";
-            warn.innerHTML = `<span>Para vender fotos preencha seu <strong>celular</strong> antes.</span>
-              <button onclick="route('vendedor','conta')" style="border:0;background:none;color:#c0392b;font-size:13px;cursor:pointer;padding:0;font-weight:700;white-space:nowrap">Completar agora →</button>`;
-            group.after(warn);
-            return; // don't activate the button
-          }
-        }
-
-        group.querySelectorAll(".vis-mode-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        const priceRow = document.getElementById("pPrecoRow") || document.getElementById("ep_price_row");
-        if (priceRow) priceRow.style.display = (mode === "sale" || mode === "both") ? "block" : "none";
-      }
-
       // ── Seller photo management helpers ───────────────────────
       async function togglePhotoPublic(apiId, currentState) {
         const fd = new FormData();
