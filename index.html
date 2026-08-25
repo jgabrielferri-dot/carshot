@@ -3656,11 +3656,32 @@
           onclick="toggleFollow(${userId}, this)">${isFollowing ? "Seguindo ✓" : "Seguir"}</button>`;
       }
 
+      // (00) 00000-0000
+      function _maskPhone(v) {
+        const d = (v || "").replace(/\D/g, "").slice(0, 11);
+        if (d.length <= 2)  return d.length ? `(${d}` : "";
+        if (d.length <= 6)  return `(${d.slice(0,2)}) ${d.slice(2)}`;
+        if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+        return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+      }
+
       // ── Login gate ────────────────────────────────────────────
+      // Guarda a página em que a pessoa estava ao abrir o cadastro, para que
+      // depois de criar a conta ela volte para a foto que ia comprar.
+      let _authReturnHash = "";
+
       function requireLogin() {
         if (isLoggedIn) return true;
-        openAuth("login");
+        openAuth("login", location.hash || "");
         return false;
+      }
+
+      // Só volta para páginas de foto — nos outros casos o destino padrão
+      // (painel do usuário) continua fazendo mais sentido.
+      function _consumeAuthReturn() {
+        const destino = _authReturnHash;
+        _authReturnHash = "";
+        return /^#post\//.test(destino) ? destino : "";
       }
 
       // ── Buy contact modal ─────────────────────────────────────
@@ -4973,7 +4994,7 @@
                          </div>`
                       : `<div style="margin-top:16px;padding:14px;background:var(--panel-soft);border-radius:12px;text-align:center">
                            <p class="copy" style="margin-bottom:10px">Faça login para comentar.</p>
-                           <button class="btn btn-secondary" onclick="openAuth('login')">Entrar / Criar conta</button>
+                           <button class="btn btn-secondary" onclick="openAuth('login', location.hash)">Entrar / Criar conta</button>
                          </div>`}
                   </div>
                 </aside>
@@ -5035,7 +5056,7 @@
                      </div>`
                   : `<div style="margin-top:16px;padding:14px;background:var(--panel-soft);border-radius:12px;text-align:center">
                        <p class="copy" style="margin-bottom:10px">Faça login para comentar.</p>
-                       <button class="btn btn-secondary" onclick="openAuth('login')">Entrar / Criar conta</button>
+                       <button class="btn btn-secondary" onclick="openAuth('login', location.hash)">Entrar / Criar conta</button>
                      </div>`}
               </div>
             </aside>
@@ -8204,8 +8225,9 @@
       }
       // ─────────────────────────────────────────────────────────────────────────
 
-      function openAuth(step = "login") {
+      function openAuth(step = "login", returnHash = "") {
         authStep = step;
+        _authReturnHash = returnHash;   // vazio quando o login parte do cabeçalho
         renderAuth();
         authModal.classList.add("open");
         authModal.setAttribute("aria-hidden", "false");
@@ -8222,7 +8244,9 @@
         const name = nameInput.value.trim();
         const email = emailInput.value.trim();
         const password = passInput.value;
+        const phone = (document.getElementById("signupPhone")?.value || "").trim();
         if (!name || !email || !password) { alert("Preencha todos os campos"); return; }
+        if (phone.replace(/\D/g, "").length < 10) { alert("Informe seu celular com DDD."); return; }
         if (password.length < 6) { alert("A senha deve ter ao menos 6 caracteres"); return; }
         const btn = authModal.querySelector(".btn");
         if (btn) { btn.disabled = true; btn.textContent = "Criando..."; }
@@ -8230,7 +8254,7 @@
           const data = await apiReq("/api/auth/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, name, password, account_type: accountType === "seller" ? "photographer" : "buyer" })
+            body: JSON.stringify({ email, name, password, phone, account_type: accountType === "seller" ? "photographer" : "buyer" })
           });
           setToken(data.access_token);
           isLoggedIn = true;
@@ -8238,7 +8262,9 @@
             name: data.user.name,
             avatar: data.user.avatar_url || "",
             home: data.user.account_type === "photographer" ? "vendedor" : "comprador",
-            id: data.user.id, account_type: data.user.account_type
+            id: data.user.id, account_type: data.user.account_type,
+            phone: data.user.phone || "",
+            is_admin: !!data.user.is_admin
           };
           // Registrar aceite dos termos no momento do cadastro
           recordTermsAcceptance(data.user.id);
@@ -8252,7 +8278,11 @@
           if (data.user.account_type !== "photographer") {
             await Promise.all([loadFollowing(), loadInteractions()]);
           }
-          closeAuth(); route(currentUser.home);
+          closeAuth();
+          // Veio de um "Comprar"? Volta para a foto em vez de ir para o painel.
+          const voltarPara = _consumeAuthReturn();
+          if (voltarPara) { location.hash = voltarPara; render(); }
+          else route(currentUser.home);
         } catch (e) {
           alert(e.message);
           if (btn) { btn.disabled = false; btn.textContent = "Criar conta"; }
@@ -8407,6 +8437,7 @@
           <div class="form">
             <label>Nome completo<input id="signupName" placeholder="Seu nome" autocomplete="name"></label>
             <label>E-mail<input id="signupEmail" placeholder="email@exemplo.com" type="email" autocomplete="email"></label>
+            <label>Celular<input id="signupPhone" placeholder="(00) 00000-0000" type="tel" inputmode="tel" maxlength="15" autocomplete="tel" oninput="this.value=_maskPhone(this.value)"></label>
             <label>Senha<input id="signupPass" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></label>
             <label class="option-chip" style="align-items:flex-start;gap:10px;font-size:12.5px;color:var(--muted);cursor:pointer;padding:10px 0">
               <input type="checkbox" id="acceptTermsSignup" onchange="document.getElementById('signupBtn').disabled=!this.checked" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;accent-color:var(--accent)">
