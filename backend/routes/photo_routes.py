@@ -1,6 +1,7 @@
 import io
 import uuid
-from typing import Optional
+from datetime import datetime
+from typing import Optional, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import RedirectResponse
@@ -21,6 +22,51 @@ ALLOWED_MIME = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
 def _resolution(img: Image.Image) -> str:
     w, h = img.size
     return f"{w} x {h} px"
+
+
+# Tags EXIF de data/hora, em ordem de preferência:
+# 36867 DateTimeOriginal (instante do disparo)  ← o que queremos
+# 36868 DateTimeDigitized
+#   306 DateTime (última modificação do arquivo)
+_EXIF_IFD = 0x8769
+_DATE_TAGS = (36867, 36868)
+
+
+def _exif_datetime(img: Image.Image) -> Tuple[Optional[str], Optional[str]]:
+    """Lê o instante do disparo do EXIF.
+
+    Devolve ("AAAA-MM-DD", "HH:MM") ou (None, None) se a foto não tiver EXIF —
+    caso de prints, imagens editadas ou arquivos já processados por outro software.
+
+    IMPORTANTE: precisa ser chamado antes de reprocessar a imagem, porque salvar
+    de novo descarta o EXIF (o que, por sinal, também remove as coordenadas de GPS).
+    """
+    try:
+        exif = img.getexif()
+        if not exif:
+            return None, None
+
+        raw = None
+        # DateTimeOriginal vive no sub-IFD de EXIF, não no IFD principal.
+        try:
+            sub = exif.get_ifd(_EXIF_IFD)
+            for tag in _DATE_TAGS:
+                if sub.get(tag):
+                    raw = sub[tag]
+                    break
+        except Exception:
+            pass
+        if not raw:
+            raw = exif.get(306)
+        if not raw:
+            return None, None
+
+        if isinstance(raw, bytes):
+            raw = raw.decode("ascii", "ignore")
+        dt = datetime.strptime(str(raw).strip()[:19], "%Y:%m:%d %H:%M:%S")
+        return dt.strftime("%Y-%m-%d"), dt.strftime("%H:%M")
+    except Exception:
+        return None, None
 
 
 def _photo_dict(photo: models.Photo, *, include_plate: bool = False, db=None) -> dict:
@@ -152,6 +198,9 @@ async def upload_photo(
     img = Image.open(io.BytesIO(raw))
     resolution = _resolution(img)
 
+    # Lido antes de reprocessar a imagem — o re-save descarta o EXIF.
+    exif_date, exif_time = _exif_datetime(img)
+
     # Upload original
     original_bytes = _to_jpeg_bytes(img, quality=92)
     original_url = storage.upload_photo(original_bytes, ".jpg")
@@ -177,8 +226,9 @@ async def upload_photo(
         plate=plate.strip().upper(),
         event=event.strip(),
         location=location.strip(),
-        event_date=event_date.strip(),
-        event_time=event_time.strip() or None,
+        # O que o fotógrafo digitou tem prioridade; o EXIF preenche o que ficou vazio.
+        event_date=event_date.strip() or exif_date or "",
+        event_time=event_time.strip() or exif_time or None,
         price=price,
         description=description.strip(),
         is_public=is_public,
