@@ -56,7 +56,9 @@ def my_liked_photos(
     result = []
     for lk in likes:
         photo = db.query(models.Photo).filter(models.Photo.id == lk.photo_id).first()
-        if photo and photo.is_public:
+        # Mesma regra de visibilidade da listagem de fotos: uma foto só à venda
+        # continua visível (com marca d'água), então precisa aparecer aqui também.
+        if photo and (photo.is_public or photo.is_for_sale):
             result.append(_photo_dict(photo, db=db))
     return result
 
@@ -106,7 +108,8 @@ def my_saved_photos(
     result = []
     for sv in saves:
         photo = db.query(models.Photo).filter(models.Photo.id == sv.photo_id).first()
-        if photo and photo.is_public:
+        # Idem: fotos só à venda também entram nos salvos.
+        if photo and (photo.is_public or photo.is_for_sale):
             result.append(_photo_dict(photo, db=db))
     return result
 
