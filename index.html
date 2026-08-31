@@ -3509,15 +3509,66 @@
         if (id) { const el = document.getElementById(id); if (el) el.classList.add('active'); }
       }
       function search(value) { location.hash = `busca/${encodeURIComponent(value || "")}`; }
-      function addToCart(id) {
-        const photo = photos.find((item) => item.id === id);
-        if (photo && !cart.some((item) => item.id === id)) cart.push(photo);
-        updateHeader();
+      // ── Carrinho ──────────────────────────────────────────────
+      // Guarda só os ids das fotos; os dados vêm da API na hora de exibir,
+      // para o carrinho nunca mostrar preço ou título desatualizado.
+      const CART_KEY = "spotgrid_cart";
+
+      function _loadCart() {
+        try {
+          const bruto = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+          cart = Array.isArray(bruto) ? bruto.filter(n => Number.isInteger(n)) : [];
+        } catch { cart = []; }
       }
-      function removeFromCart(id) {
-        cart = cart.filter(item => item.id !== id);
+
+      function _saveCart() {
+        try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch {}
+      }
+
+      // Aceita 4, "4" ou "api-4"
+      function _cartId(id) {
+        const m = String(id).match(/(\d+)/);
+        return m ? parseInt(m[1], 10) : null;
+      }
+
+      function isInCart(id) {
+        const n = _cartId(id);
+        return n !== null && cart.includes(n);
+      }
+
+      function toggleCart(id, btn) {
+        const n = _cartId(id);
+        if (n === null) return;
+        if (cart.includes(n)) cart = cart.filter(x => x !== n);
+        else cart.push(n);
+        _saveCart();
         updateHeader();
-        if (location.hash.replace("#","") === "carrinho") cartPage();
+        _refreshCartButtons();
+        if ((location.hash.replace("#","") || "").split("/")[0] === "carrinho") cartPage();
+      }
+
+      function removeFromCart(id) {
+        const n = _cartId(id);
+        cart = cart.filter(x => x !== n);
+        _saveCart();
+        updateHeader();
+        if ((location.hash.replace("#","") || "").split("/")[0] === "carrinho") cartPage();
+      }
+
+      // Mantém todos os botões da tela em sincronia com o carrinho.
+      function _refreshCartButtons() {
+        document.querySelectorAll("[data-cart-id]").forEach(btn => {
+          const dentro = isInCart(btn.dataset.cartId);
+          btn.classList.toggle("btn-secondary", dentro);
+          btn.textContent = dentro ? "✓ No carrinho" : "Adicionar ao carrinho";
+        });
+      }
+
+      // Botão padrão de carrinho, usado em todos os lugares que vendiam foto.
+      function cartBtn(photoId, estilo = "") {
+        const dentro = isInCart(photoId);
+        return `<button class="btn ${dentro ? "btn-secondary" : ""}" data-cart-id="${photoId}" style="${estilo}"
+                  onclick="toggleCart('${photoId}', this)">${dentro ? "✓ No carrinho" : "Adicionar ao carrinho"}</button>`;
       }
       function updateHeader() {
         cartCount.textContent = String(cart.length);
@@ -3687,34 +3738,6 @@
 
       // ── Buy contact modal ─────────────────────────────────────
       const SPOTGRID_WPP = "5519982912656";
-
-      async function openBuyContact(photographerId, price, title, photoId) {
-        if (!requireLogin()) return;
-        const priceText = price && price !== "null" ? ` por *R$ ${price}*` : "";
-        let cleanId = String(photoId || "").replace("api-photo-", "");
-        if (cleanId && cleanId !== "null" && !/^api-/.test(cleanId)) cleanId = "api-" + cleanId;
-        const photoUrl = cleanId && cleanId !== "null" && cleanId !== "api-"
-          ? `\n\nLink da foto: https://jgabrielferri-dot.github.io/carshot/#post/${cleanId}`
-          : "";
-
-        // Registra o pedido antes de abrir o WhatsApp, para ficar rastreável no painel.
-        let orderText = "";
-        const numericId = parseInt(String(cleanId).replace("api-", ""), 10);
-        if (numericId) {
-          try {
-            const fd = new FormData();
-            fd.append("photo_id", numericId);
-            const order = await apiReq("/api/orders", { method: "POST", body: fd });
-            orderText = `\n\nNº do pedido: *#${order.id}*`;
-          } catch (e) {
-            // Não bloquear a compra se o registro falhar — o contato ainda vale.
-            console.warn("Não foi possível registrar o pedido:", e.message);
-          }
-        }
-
-        const msg = `Olá! Tenho interesse em comprar a foto *${title || "sem título"}*${priceText} na SpotGrid.${orderText}${photoUrl}`;
-        window.open(`https://wa.me/${SPOTGRID_WPP}?text=${encodeURIComponent(msg)}`, "_blank");
-      }
 
       // like count cache: { "api-5": 3 }
       const _likeCounts = {};
@@ -3895,7 +3918,7 @@
                     onclick="toggleSave('${post.id}')">${saved ? "🔖 Salvo" : "🔖 Salvar"}</button>`}
                 <button class="social-btn" onclick="route('post','${post.id}')">💬 Comentar${commentCount ? " " + commentCount : ""}</button>
                 <button class="social-btn" onclick="route('post','${post.id}')">Ver mais</button>
-                ${post.sellable && !isOwner ? `<button class="social-btn active" onclick="openBuyContact(${post.photographerId || ""}, ${post.price || "null"}, '${(post.car || post.title || "").replace(/'/g, "\\'")}', '${post.id || ""}')">Comprar foto</button>` : ""}
+                ${post.is_for_sale && !isOwner ? `<button class="social-btn ${isInCart(post.id) ? "active" : ""}" data-cart-id="${post.id}" onclick="toggleCart('${post.id}', this)">${isInCart(post.id) ? "✓ No carrinho" : "🛒 Adicionar ao carrinho"}</button>` : ""}
               </div>
             </div>
           </article>
@@ -4979,7 +5002,8 @@
                         ? `<div class="summary-row" style="margin-top:22px"><span>Preço</span><strong>R$ ${p.price || "—"}</strong></div>
                            <p class="copy" style="margin-top:10px;padding:12px 16px;background:var(--panel-soft);border-radius:12px;font-size:13px">Esta é sua foto à venda.</p>`
                         : `<div class="summary-row" style="margin-top:22px"><span>Preço</span><strong>R$ ${p.price || "—"}</strong></div>
-                           <button class="btn" style="width:100%;margin-top:14px" onclick="openBuyContact(${p.photographer_id}, ${p.price || "null"}, '${(p.title || "").replace(/'/g, "\\'")}', ${p.id || "null"})">Comprar foto em alta resolução</button>`)
+                           ${cartBtn("api-" + p.id, "width:100%;margin-top:14px")}
+                           <button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="route('carrinho')">Ir para o carrinho</button>`)
                     : `<p class="copy" style="margin-top:22px;padding:14px;background:var(--panel-soft);border-radius:12px">Esta foto faz parte do portfólio público do fotógrafo e não está à venda.</p>`}
 
                   <div style="margin-top:28px" id="commentSection-${p.id}">
@@ -5044,7 +5068,7 @@
                 <button class="social-btn ${saved ? "active" : ""}" onclick="toggleSave('${post.id}')">Salvar</button>
                 <button class="social-btn">Compartilhar</button>
               </div>
-              ${post.sellable ? `<div class="summary-row" style="margin-top:22px"><span>Preço</span><strong>${money(post.price)}</strong></div><button class="btn" style="width:100%;margin-top:18px" onclick="openBuyContact(${post.photographerId || "null"}, ${post.price || "null"}, '${(post.car || "").replace(/'/g, "\\'")}', '${post.id || ""}')">Comprar foto</button>` : `<p class="copy" style="margin-top:22px">Este post é público e não está à venda.</p>`}
+              ${post.sellable ? `<div class="summary-row" style="margin-top:22px"><span>Preço</span><strong>${money(post.price)}</strong></div>${cartBtn(post.id, "width:100%;margin-top:18px")}` : `<p class="copy" style="margin-top:22px">Este post é público e não está à venda.</p>`}
               <div style="margin-top:30px">
                 <h3>Comentários</h3>
                 <div class="comment-list">
@@ -7389,7 +7413,7 @@
                 <h2>${photo.title}</h2>
                 ${info(photo)}
                 <div style="margin-top:24px" class="card-row"><span class="copy">Licenca individual</span><span class="price">${money(photo.price)}</span></div>
-                <button class="btn" style="width:100%;margin-top:22px" onclick="openBuyContact(${photo.photographerId || "null"}, ${photo.price || "null"}, '${(photo.title || "").replace(/'/g, "\\'")}', '${photo.id || ""}')">Comprar agora</button>
+                ${cartBtn(photo.id, "width:100%;margin-top:22px")}
               </aside>
             </div>
           </section>
@@ -7408,19 +7432,126 @@
         </div>`;
       }
 
-      function cartPage() {
+      async function cartPage() {
+        if (!cart.length) {
+          view.innerHTML = `
+            <section class="page container" style="display:flex;align-items:center;justify-content:center;min-height:60vh">
+              <div style="text-align:center;max-width:460px">
+                <p style="font-size:44px;margin-bottom:18px">🛒</p>
+                <h1 style="font-size:28px;margin-bottom:14px">Seu carrinho está vazio.</h1>
+                <p class="lead" style="color:var(--muted)">Encontre as fotos do seu carro e adicione todas de uma vez.</p>
+                <button class="btn" style="margin-top:26px" onclick="route('explorar')">Explorar fotos</button>
+              </div>
+            </section>`;
+          return;
+        }
+
+        view.innerHTML = `<section class="page container" style="padding:80px 0;text-align:center"><p class="lead">Carregando carrinho…</p></section>`;
+
+        // Busca cada foto na API. As que sumiram (apagadas ou recusadas) saem do carrinho.
+        const resultados = await Promise.all(cart.map(id =>
+          apiReq(`/api/photos/${id}`).catch(() => null)
+        ));
+        const fotos = resultados.filter(Boolean);
+        const perdidas = resultados.length - fotos.length;
+        if (perdidas) {
+          cart = fotos.map(f => f.id);
+          _saveCart();
+          updateHeader();
+          if (!fotos.length) { cartPage(); return; }
+        }
+
+        const total = fotos.reduce((s, f) => s + (f.price || 0), 0);
+        const porFotografo = {};
+        fotos.forEach(f => {
+          const nome = f.photographer_name || "Fotógrafo";
+          (porFotografo[nome] = porFotografo[nome] || []).push(f);
+        });
+
         view.innerHTML = `
-          <section class="page container" style="display:flex;align-items:center;justify-content:center;min-height:60vh">
-            <div style="text-align:center;max-width:460px">
-              <p style="font-size:48px;margin-bottom:20px">🚧</p>
-              <p class="eyebrow" style="margin-bottom:10px">Em breve</p>
-              <h1 style="font-size:28px;margin-bottom:16px">Carrinho em desenvolvimento.</h1>
-              <p class="lead" style="color:var(--muted)">Esta funcionalidade ainda está sendo desenvolvida. Para comprar uma foto, entre em contato diretamente com o fotógrafo.</p>
-              <button class="btn btn-secondary" style="margin-top:28px" onclick="route('explorar')">Explorar fotos</button>
+          <section class="page container split">
+            <div>
+              <div class="page-title">
+                <p class="eyebrow">Carrinho</p>
+                <h1>Fotos selecionadas.</h1>
+                <p class="lead">${fotos.length} foto${fotos.length !== 1 ? "s" : ""} de ${Object.keys(porFotografo).length} fotógrafo${Object.keys(porFotografo).length !== 1 ? "s" : ""}.</p>
+                ${perdidas ? `<p class="meta" style="color:#b8860b;margin-top:8px">${perdidas} foto${perdidas !== 1 ? "s" : ""} saiu do carrinho por não estar mais disponível.</p>` : ""}
+              </div>
+              <div class="dash-content">
+                ${fotos.map(f => `
+                  <article class="cart-item">
+                    <img src="${API_BASE}/api/photos/${f.id}/preview" alt="${f.title || ""}">
+                    <div>
+                      <h3>${f.title || "Sem título"}</h3>
+                      <p class="meta">${[f.brand, f.model, f.location].filter(Boolean).join(" · ")}</p>
+                      <p class="meta">${f.photographer_name || "Fotógrafo"}${f.resolution ? " · " + f.resolution : ""}</p>
+                      <button onclick="removeFromCart(${f.id})" style="margin-top:8px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--muted);padding:0;text-decoration:underline">✕ Remover</button>
+                    </div>
+                    <span class="price">${_brl(f.price)}</span>
+                  </article>
+                `).join("")}
+              </div>
             </div>
+            <aside class="surface pad sidebar">
+              <p class="eyebrow">Resumo</p>
+              <h2>Pedido</h2>
+              <div style="margin-top:20px">
+                ${fotos.map(f => `<div class="summary-row"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.title || "Foto"}</span><strong>${_brl(f.price)}</strong></div>`).join("")}
+                <div class="card-row" style="margin-top:18px"><span>Total</span><span class="price">${_brl(total)}</span></div>
+              </div>
+              <button class="btn" id="cartWppBtn" style="width:100%;margin-top:24px" onclick="finalizarCarrinho()">Finalizar pelo WhatsApp</button>
+              <p class="copy" style="font-size:12px;color:var(--muted);margin-top:12px">Abrimos o WhatsApp com todas as fotos na mesma mensagem. O pagamento é combinado por lá e o download é liberado em Minhas fotos.</p>
+              <button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="route('explorar')">Continuar explorando</button>
+            </aside>
           </section>`;
-        return;
-        const items = cart;
+      }
+
+      // Abre um pedido para cada foto e manda tudo numa mensagem só.
+      async function finalizarCarrinho() {
+        if (!requireLogin()) return;
+        if (!cart.length) return;
+        const btn = document.getElementById("cartWppBtn");
+        if (btn) { btn.disabled = true; btn.textContent = "Preparando…"; }
+
+        const linhas = [];
+        let total = 0;
+        let falhas = 0;
+
+        for (const id of cart.slice()) {
+          let foto = null;
+          try { foto = await apiReq(`/api/photos/${id}`); } catch { falhas++; continue; }
+          let numeroPedido = "";
+          try {
+            const fd = new FormData();
+            fd.append("photo_id", id);
+            const pedido = await apiReq("/api/orders", { method: "POST", body: fd });
+            numeroPedido = ` (pedido *#${pedido.id}*)`;
+          } catch (e) {
+            // Sem o registro o contato ainda vale — o link identifica a foto.
+            console.warn("não foi possível registrar o pedido da foto", id, e.message);
+          }
+          total += foto.price || 0;
+          linhas.push(`${linhas.length + 1}. *${foto.title || "Foto"}* — ${_brl(foto.price)}${numeroPedido}\n   https://jgabrielferri-dot.github.io/carshot/#post/api-${foto.id}`);
+        }
+
+        if (!linhas.length) {
+          alert("Não foi possível preparar o pedido. Tente novamente.");
+          if (btn) { btn.disabled = false; btn.textContent = "Finalizar pelo WhatsApp"; }
+          return;
+        }
+
+        const msg =
+          `Olá! Quero comprar ${linhas.length === 1 ? "esta foto" : `estas ${linhas.length} fotos`} na SpotGrid:\n\n` +
+          linhas.join("\n\n") +
+          `\n\n*Total: ${_brl(total)}*`;
+        window.open(`https://wa.me/${SPOTGRID_WPP}?text=${encodeURIComponent(msg)}`, "_blank");
+
+        if (btn) { btn.disabled = false; btn.textContent = "Finalizar pelo WhatsApp"; }
+        if (falhas) alert(`${falhas} foto(s) não estavam mais disponíveis e ficaram de fora.`);
+      }
+
+      function _cartPageAntiga() {
+        const items = [];
         const subtotal = items.reduce((sum, item) => sum + item.price, 0);
         const discount = items.length ? 18 : 0;
         const total = Math.max(subtotal - discount, 0);
@@ -8797,7 +8928,7 @@
               </div>
               <h2 style="margin-top:12px">${photo.title}</h2>
               ${info(photo)}
-              <button class="btn" style="width:100%;margin-top:24px" onclick="openBuyContact(${photo.photographerId || "null"}, ${photo.price || "null"}, '${(photo.title || "").replace(/'/g, "\\'")}', '${photo.id || ""}')">Comprar</button>
+              ${cartBtn(photo.id, "width:100%;margin-top:24px")}
             </div>
           </div>
         `;
@@ -8863,6 +8994,8 @@
         else if (name === "moderacao") moderationPage();
         else home();
         window.scrollTo({ top: 0, behavior: "smooth" });
+        // páginas que carregam fotos por API renderizam depois; por isso o atraso
+        setTimeout(() => { try { _refreshCartButtons(); } catch {} }, 900);
       }
 
       // ── Visibility mode selector helper ───────────────────────
@@ -9109,6 +9242,7 @@
 
       async function initApp() {
         try { initCookieBanner(); } catch(e) { console.warn("cookie banner init error:", e); }
+        try { _loadCart(); } catch(e) { console.warn("cart load error:", e); }
         try {
           const tok = getToken();
           if (tok) {
